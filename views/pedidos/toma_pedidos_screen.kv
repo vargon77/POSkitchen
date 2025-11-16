@@ -1,0 +1,199 @@
+# views/pedidos/toma_pedidos_screen.kv - VERSIÓN MODERNA
+<TomaPedidoScreen>:
+    MDBoxLayout:
+        orientation: "vertical"
+        spacing: "0dp"
+        padding: "0dp"
+
+        # APP BAR MODERNA
+        MDBoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: ds_button_height('lg')
+            padding: [ds_spacing('lg'), ds_spacing('md')]
+            spacing: ds_spacing('md')
+            md_bg_color: ds_color('primary')
+
+            MDIconButton:
+                icon: "arrow-left"
+                theme_icon_color: "Custom"
+                icon_color: ds_color('white')
+                on_release: app.cambiar_pantalla("menu")
+
+            MDLabel:
+                text: f"Pedido - Mesa {root.mesa_actual}"
+                font_style: "H6"
+                theme_text_color: "Custom"
+                text_color: ds_color('white')
+                bold: True
+                size_hint_x: 1
+                halign: "center"
+
+            MDFloatingActionButton:
+                icon: "cash-register"
+                theme_icon_color: "Custom"
+                icon_color: ds_color('white')
+                md_bg_color: ds_color('accent')
+                elevation: 4
+                on_release: root.solicitar_cierre_cuenta()
+
+        MDBoxLayout:
+            orientation: "horizontal"
+            spacing: ds_spacing('md')
+            padding: ds_spacing('md')
+
+            # COLUMNA IZQUIERDA - 70%
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 0.7
+                spacing: ds_spacing('md')
+
+                # SELECTOR DE MESA
+                MDCard:
+                    orientation: "horizontal"
+                    size_hint_y: None
+                    height: ds_button_height('md')
+                    padding: ds_spacing('md')
+                    spacing: ds_spacing('sm')
+                    elevation: 2
+
+                    MDLabel:
+                        text: "Mesa:"
+                        bold: True
+                        size_hint_x: 0.2
+                        halign: "left"
+
+                    MDTextField:
+                        id: campo_mesa
+                        text: root.mesa_actual
+                        size_hint_x: 0.5
+                        mode: "rectangle"
+                        on_text_validate: root.mesa_actual = self.text
+
+                    MDRaisedButton:
+                        text: "Cambiar"
+                        size_hint_x: 0.3
+                        on_release: root.mesa_actual = campo_mesa.text
+
+                # CATEGORÍAS CON CHIPS MODERNOS
+                MDBoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: dp(80)
+                    spacing: ds_spacing('sm')
+
+                    MDLabel:
+                        text: "Categorías:"
+                        font_style: "Subtitle1"
+                        bold: True
+                        size_hint_y: None
+                        height: dp(30)
+
+                    ScrollView:
+                        size_hint_y: None
+                        height: dp(50)
+                        do_scroll_x: True
+                        do_scroll_y: False
+
+                        MDBoxLayout:
+                            id: contenedor_categorias
+                            orientation: "horizontal"
+                            size_hint_x: None
+                            height: dp(50)
+                            spacing: ds_spacing('sm')
+                            padding: ds_spacing('sm')
+                            adaptive_size: True
+
+                # PRODUCTOS CON GRID RESPONSIVO
+                MDBoxLayout:
+                    orientation: "vertical"
+                    spacing: ds_spacing('sm')
+
+                    MDLabel:
+                        text: "Productos:"
+                        font_style: "Subtitle1"
+                        bold: True
+                        size_hint_y: None
+                        height: dp(30)
+
+                    ScrollView:
+                        MDGridLayout:
+                            id: grid_productos
+                            cols: ds_grid_cols(2)  # Responsivo
+                            spacing: ds_spacing('md')
+                            padding: ds_spacing('sm')
+                            size_hint_y: None
+                            height: self.minimum_height
+                            adaptive_size: True
+
+            # COLUMNA DERECHA - RESUMEN MODERNO (30%)
+            MDCard:
+                orientation: "vertical"
+                size_hint_x: 0.3
+                padding: ds_spacing('lg')
+                spacing: ds_spacing('md')
+                elevation: 4
+                radius: [dp(12)]
+
+                MDLabel:
+                    text: "RESUMEN DEL PEDIDO"
+                    font_style: "H6"
+                    theme_text_color: "Primary"
+                    halign: "center"
+                    size_hint_y: None
+                    height: dp(40)
+
+                # LISTA DE ITEMS
+                ScrollView:
+                    MDBoxLayout:
+                        id: lista_items
+                        orientation: "vertical"
+                        spacing: ds_spacing('sm')
+                        size_hint_y: None
+                        height: self.minimum_height
+                        adaptive_size: True
+
+                # BOTONES DE ACCIÓN
+                MDBoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: None
+                    height: ds_button_height('md')
+                    spacing: ds_spacing('sm')
+
+                    MDFlatButton:
+                        text: "LIMPIAR"
+                        theme_text_color: "Custom"
+                        text_color: ds_color('error')
+                        on_release: root.limpiar_pedido()
+
+                    MDRaisedButton:
+                        text: "CONFIRMAR"
+                        md_bg_color: ds_color('success')
+                        on_release: root.confirmar_pedido()
+
+                # TOTAL
+                MDCard:
+                    orientation: "horizontal"
+                    size_hint_y: None
+                    height: ds_button_height('lg')
+                    padding: ds_spacing('md')
+                    md_bg_color: ds_color('primary')
+                    radius: [dp(8)]
+
+                    MDLabel:
+                        text: "TOTAL:"
+                        font_style: "H6"
+                        theme_text_color: "Custom"
+                        text_color: ds_color('white')
+                        bold: True
+                        size_hint_x: 0.6
+
+                    MDLabel:
+                        id: label_total
+                        text: f"${root.total_pedido:.2f}"
+                        font_style: "H6"
+                        theme_text_color: "Custom"
+                        text_color: ds_color('white')
+                        bold: True
+                        size_hint_x: 0.4
+                        halign: "right"

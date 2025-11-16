@@ -1,0 +1,162 @@
+# views/config/config_screen.kv 
+<ConfigScreen>:
+    name: "config"
+    
+    BoxLayout:
+        orientation: "vertical"
+        spacing: "10dp"
+        padding: "20dp"
+
+        # Header
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: "50dp"
+            spacing: "10dp"
+
+            Button:
+                text: "←"
+                size_hint_x: None
+                width: "50dp"
+                background_color: (0.3, 0.5, 0.8, 1)
+                background_normal: ''
+                on_release: root.manager.current = "menu"  # CORREGIDO
+                
+            Label:
+                text: "⚙️ CONFIGURACIÓN DE EMPRESA"
+                font_size: '20sp'
+                bold: True
+                halign: "left"
+                color: (0.2, 0.2, 0.2, 1)
+
+        ScrollView:
+            BoxLayout:
+                orientation: "vertical"
+                spacing: "15dp"
+                size_hint_y: None
+                height: self.minimum_height
+                padding: "10dp"
+
+                # Nombre de la empresa
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: "80dp"
+
+                    Label:
+                        text: "Nombre de la Empresa:"
+                        font_size: '16sp'
+                        bold: True
+                        size_hint_y: None
+                        height: "30dp"
+
+                    TextInput:
+                        id: input_nombre
+                        hint_text: "Ej: Mi Restaurante S.A. de C.V."
+                        multiline: False
+                        size_hint_y: None
+                        height: "40dp"
+                        write_tab: False
+
+                # Dirección
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: "80dp"
+
+                    Label:
+                        text: "Dirección:"
+                        font_size: '16sp'
+                        bold: True
+                        size_hint_y: None
+                        height: "30dp"
+
+                    TextInput:
+                        id: input_direccion
+                        hint_text: "Ej: Av. Principal #123, Col. Centro"
+                        multiline: False
+                        size_hint_y: None
+                        height: "40dp"
+                        write_tab: False
+
+                # Teléfono
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: "80dp"
+
+                    Label:
+                        text: "Teléfono:"
+                        font_size: '16sp'
+                        bold: True
+                        size_hint_y: None
+                        height: "30dp"
+
+                    TextInput:
+                        id: input_telefono
+                        hint_text: "Ej: (555) 123-4567"
+                        multiline: False
+                        size_hint_y: None
+                        height: "40dp"
+                        write_tab: False
+
+                # RFC
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: "80dp"
+
+                    Label:
+                        text: "RFC:"
+                        font_size: '16sp'
+                        bold: True
+                        size_hint_y: None
+                        height: "30dp"
+
+                    TextInput:
+                        id: input_rfc
+                        hint_text: "Ej: XAXX010101000"
+                        multiline: False
+                        size_hint_y: None
+                        height: "40dp"
+                        write_tab: False
+
+                # Leyenda Footer
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: "100dp"
+
+                    Label:
+                        text: "Leyenda de Pie de Página:"
+                        font_size: '16sp'
+                        bold: True
+                        size_hint_y: None
+                        height: "30dp"
+
+                    TextInput:
+                        id: input_leyenda
+                        hint_text: "Ej: ¡Gracias por su preferencia!"
+                        multiline: True
+                        size_hint_y: None
+                        height: "60dp"
+                        write_tab: False
+
+        # Botones de acción
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: "60dp"
+            spacing: "10dp"
+
+            Button:
+                text: "GUARDAR"
+                background_color: (0.2, 0.7, 0.2, 1)
+                background_normal: ''
+                on_release: root.guardar_configuracion()
+
+            Button:
+                text: "CANCELAR"
+                background_color: (0.8, 0.3, 0.3, 1)
+                background_normal: ''
+                on_release: root.manager.current = "menu"  # CORREGIDO

@@ -1,0 +1,327 @@
+# views/login/login_screen.kv - VERSIÓN RESPONSIVA
+<LoginScreen>:
+    # Fondo con gradiente suave
+    canvas.before:
+        Color:
+            rgba: (0.95, 0.95, 0.97, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    
+    FloatLayout:
+        # Contenedor central adaptativo
+        BoxLayout:
+            orientation: "vertical"
+            size_hint: (0.9, None) if root.width < 768 else (0.5, None) if root.width < 1024 else (0.35, None)
+            height: self.minimum_height
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}
+            padding: app.ds_spacing('xl') if hasattr(app, 'ds_spacing') else '24dp'
+            spacing: app.ds_spacing('lg') if hasattr(app, 'ds_spacing') else '20dp'
+
+            # ==================== LOGO / HEADER ====================
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: '180dp' if root.width < 768 else '200dp'
+                spacing: app.ds_spacing('md') if hasattr(app, 'ds_spacing') else '12dp'
+                
+                # Logo/Icono grande
+                Label:
+                    text: "🔐"
+                    font_size: '64sp' if root.width < 768 else '72sp'
+                    size_hint_y: None
+                    height: '80dp'
+                
+                # Título
+                Label:
+                    text: "SISTEMA POS"
+                    font_size: app.ds_font('3xl') if hasattr(app, 'ds_font') else '28sp'
+                    bold: True
+                    halign: 'center'
+                    color: app.ds_color('primary') if hasattr(app, 'ds_color') else (1, 0.42, 0.21, 1)
+                    size_hint_y: None
+                    height: '40dp'
+                
+                # Subtítulo
+                Label:
+                    text: "Control de Acceso"
+                    font_size: app.ds_font('lg') if hasattr(app, 'ds_font') else '18sp'
+                    color: app.ds_color('gray') if hasattr(app, 'ds_color') else (0.5, 0.5, 0.5, 1)
+                    halign: 'center'
+                    size_hint_y: None
+                    height: '30dp'
+
+            # ==================== TARJETA DE LOGIN ====================
+            # Card con sombra
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: '480dp' if root.width < 768 else '520dp'
+                padding: app.ds_spacing('xl') if hasattr(app, 'ds_spacing') else '24dp'
+                spacing: app.ds_spacing('lg') if hasattr(app, 'ds_spacing') else '20dp'
+                canvas.before:
+                    Color:
+                        rgba: (1, 1, 1, 1)
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [12]
+                    # Sombra
+                    Color:
+                        rgba: (0, 0, 0, 0.08)
+                    RoundedRectangle:
+                        pos: [self.x, self.y - 4]
+                        size: self.size
+                        radius: [12]
+
+                # Display del PIN
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: '100dp'
+                    spacing: app.ds_spacing('sm') if hasattr(app, 'ds_spacing') else '10dp'
+                    
+                    # PIN visual
+                    Label:
+                        id: display_pin
+                        text: "● ● ● ● ● ●"
+                        font_size: '36sp' if root.width < 768 else '40sp'
+                        bold: True
+                        halign: 'center'
+                        color: app.ds_color('dark') if hasattr(app, 'ds_color') else (0.2, 0.2, 0.2, 1)
+                        size_hint_y: None
+                        height: '50dp'
+                    
+                    # Mensaje de estado
+                    Label:
+                        id: label_mensaje
+                        text: root.mensaje
+                        font_size: app.ds_font('base') if hasattr(app, 'ds_font') else '16sp'
+                        halign: 'center'
+                        color: app.ds_color('error') if ("incorrecto" in root.mensaje.lower() or "error" in root.mensaje.lower()) else app.ds_color('gray') if hasattr(app, 'ds_color') else (0.3, 0.3, 0.3, 1)
+                        size_hint_y: None
+                        height: '30dp'
+
+                # Teclado numérico
+                GridLayout:
+                    cols: 3
+                    spacing: app.ds_spacing('sm') if hasattr(app, 'ds_spacing') else '10dp'
+                    padding: app.ds_spacing('sm') if hasattr(app, 'ds_spacing') else '10dp'
+                    size_hint_y: 1
+
+                    # Fila 1: 1, 2, 3
+                    Button:
+                        id: btn_1
+                        text: "1"
+                        font_size: '26sp' if root.width < 768 else '28sp'
+                        bold: True
+                        background_normal: ''
+                        background_color: app.ds_color('light') if hasattr(app, 'ds_color') else (0.96, 0.96, 0.96, 1)
+                        color: app.ds_color('dark') if hasattr(app, 'ds_color') else (0.2, 0.2, 0.2, 1)
+                        on_press: root.agregar_digito("1")
+                        canvas.before:
+                            Color:
+                                rgba: self.background_color
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [8]
+                    
+                    Button:
+                        id: btn_2
+                        text: "2"
+                        font_size: '26sp' if root.width < 768 else '28sp'
+                        bold: True
+                        background_normal: ''
+                        background_color: app.ds_color('light') if hasattr(app, 'ds_color') else (0.96, 0.96, 0.96, 1)
+                        color: app.ds_color('dark') if hasattr(app, 'ds_color') else (0.2, 0.2, 0.2, 1)
+                        on_press: root.agregar_digito("2")
+                        canvas.before:
+                            Color:
+                                rgba: self.background_color
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [8]
+                    
+                    Button:
+                        id: btn_3
+                        text: "3"
+                        font_size: '26sp' if root.width < 768 else '28sp'
+                        bold: True
+                        background_normal: ''
+                        background_color: app.ds_color('light') if hasattr(app, 'ds_color') else (0.96, 0.96, 0.96, 1)
+                        color: app.ds_color('dark') if hasattr(app, 'ds_color') else (0.2, 0.2, 0.2, 1)
+                        on_press: root.agregar_digito("3")
+                        canvas.before:
+                            Color:
+                                rgba: self.background_color
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [8]
+
+                    # Fila 2: 4, 5, 6
+                    Button:
+                        id: btn_4
+                        text: "4"
+                        font_size: '26sp' if root.width < 768 else '28sp'
+                        bold: True
+                        background_normal: ''
+                        background_color: app.ds_color('light') if hasattr(app, 'ds_color') else (0.96, 0.96, 0.96, 1)
+                        color: app.ds_color('dark') if hasattr(app, 'ds_color') else (0.2, 0.2, 0.2, 1)
+                        on_press: root.agregar_digito("4")
+                        canvas.before:
+                            Color:
+                                rgba: self.background_color
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [8]
+                    
+                    Button:
+                        id: btn_5
+                        text: "5"
+                        font_size: '26sp' if root.width < 768 else '28sp'
+                        bold: True
+                        background_normal: ''
+                        background_color: app.ds_color('light') if hasattr(app, 'ds_color') else (0.96, 0.96, 0.96, 1)
+                        color: app.ds_color('dark') if hasattr(app, 'ds_color') else (0.2, 0.2, 0.2, 1)
+                        on_press: root.agregar_digito("5")
+                        canvas.before:
+                            Color:
+                                rgba: self.background_color
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [8]
+                    
+                    Button:
+                        id: btn_6
+                        text: "6"
+                        font_size: '26sp' if root.width < 768 else '28sp'
+                        bold: True
+                        background_normal: ''
+                        background_color: app.ds_color('light') if hasattr(app, 'ds_color') else (0.96, 0.96, 0.96, 1)
+                        color: app.ds_color('dark') if hasattr(app, 'ds_color') else (0.2, 0.2, 0.2, 1)
+                        on_press: root.agregar_digito("6")
+                        canvas.before:
+                            Color:
+                                rgba: self.background_color
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [8]
+
+                    # Fila 3: 7, 8, 9
+                    Button:
+                        id: btn_7
+                        text: "7"
+                        font_size: '26sp' if root.width < 768 else '28sp'
+                        bold: True
+                        background_normal: ''
+                        background_color: app.ds_color('light') if hasattr(app, 'ds_color') else (0.96, 0.96, 0.96, 1)
+                        color: app.ds_color('dark') if hasattr(app, 'ds_color') else (0.2, 0.2, 0.2, 1)
+                        on_press: root.agregar_digito("7")
+                        canvas.before:
+                            Color:
+                                rgba: self.background_color
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [8]
+                    
+                    Button:
+                        id: btn_8
+                        text: "8"
+                        font_size: '26sp' if root.width < 768 else '28sp'
+                        bold: True
+                        background_normal: ''
+                        background_color: app.ds_color('light') if hasattr(app, 'ds_color') else (0.96, 0.96, 0.96, 1)
+                        color: app.ds_color('dark') if hasattr(app, 'ds_color') else (0.2, 0.2, 0.2, 1)
+                        on_press: root.agregar_digito("8")
+                        canvas.before:
+                            Color:
+                                rgba: self.background_color
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [8]
+                    
+                    Button:
+                        id: btn_9
+                        text: "9"
+                        font_size: '26sp' if root.width < 768 else '28sp'
+                        bold: True
+                        background_normal: ''
+                        background_color: app.ds_color('light') if hasattr(app, 'ds_color') else (0.96, 0.96, 0.96, 1)
+                        color: app.ds_color('dark') if hasattr(app, 'ds_color') else (0.2, 0.2, 0.2, 1)
+                        on_press: root.agregar_digito("9")
+                        canvas.before:
+                            Color:
+                                rgba: self.background_color
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [8]
+
+                    # Fila 4: Borrar, 0, Entrar
+                    Button:
+                        id: btn_borrar
+                        text: "⌫"
+                        font_size: '22sp'
+                        bold: True
+                        background_normal: ''
+                        background_color: app.ds_color('error') if hasattr(app, 'ds_color') else (0.91, 0.3, 0.24, 1)
+                        color: (1, 1, 1, 1)
+                        on_press: root.eliminar_digito()
+                        canvas.before:
+                            Color:
+                                rgba: self.background_color
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [8]
+                    
+                    Button:
+                        id: btn_0
+                        text: "0"
+                        font_size: '26sp' if root.width < 768 else '28sp'
+                        bold: True
+                        background_normal: ''
+                        background_color: app.ds_color('light') if hasattr(app, 'ds_color') else (0.96, 0.96, 0.96, 1)
+                        color: app.ds_color('dark') if hasattr(app, 'ds_color') else (0.2, 0.2, 0.2, 1)
+                        on_press: root.agregar_digito("0")
+                        canvas.before:
+                            Color:
+                                rgba: self.background_color
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [8]
+                    
+                    Button:
+                        id: btn_entrar
+                        text: "✓"
+                        font_size: '24sp'
+                        bold: True
+                        background_normal: ''
+                        background_color: app.ds_color('success') if hasattr(app, 'ds_color') else (0.18, 0.8, 0.44, 1)
+                        color: (1, 1, 1, 1)
+                        on_press: root.realizar_login()
+                        canvas.before:
+                            Color:
+                                rgba: self.background_color
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [8]
+
+            # Footer informativo
+            Label:
+                text: "Ingrese su PIN de 6 dígitos"
+                font_size: app.ds_font('sm') if hasattr(app, 'ds_font') else '12sp'
+                color: app.ds_color('gray') if hasattr(app, 'ds_color') else (0.5, 0.5, 0.5, 1)
+                italic: True
+                size_hint_y: None
+                height: '20dp'

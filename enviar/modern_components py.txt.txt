@@ -1,0 +1,148 @@
+# mis_widgets/modern_components.py
+from kivymd.uix.card import MDCard
+from kivymd.uix.button import MDButton, MDButtonText
+from kivymd.uix.label import MDLabel
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivy.properties import StringProperty, NumericProperty, ColorProperty
+from kivy.animation import Animation
+
+class ModernCard(MDCard):
+    """Card moderno con animaciones y efectos"""
+    
+    title = StringProperty("")
+    subtitle = StringProperty("")
+    icon = StringProperty("")
+    accent_color = ColorProperty([0.41, 0.31, 0.64, 1])  # Primary color
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.elevation = 2
+        self.padding = dp(16)
+        self.radius = dp(12)
+        self.build_content()
+    
+    def build_content(self):
+        """Construir contenido del card"""
+        layout = MDBoxLayout(orientation="vertical", spacing=dp(8))
+        
+        # Header con icono
+        header = MDBoxLayout(orientation="horizontal", spacing=dp(12), adaptive_size=True)
+        
+        if self.icon:
+            icon_label = MDLabel(
+                text=self.icon,
+                font_size=sp(24),
+                theme_text_color="Custom",
+                text_color=self.accent_color,
+                size_hint_x=None,
+                width=dp(32)
+            )
+            header.add_widget(icon_label)
+        
+        # Contenido de texto
+        text_layout = MDBoxLayout(orientation="vertical", spacing=dp(4))
+        
+        if self.title:
+            title_label = MDLabel(
+                text=self.title,
+                font_style="H6",
+                theme_text_color="Primary",
+                adaptive_size=True
+            )
+            text_layout.add_widget(title_label)
+        
+        if self.subtitle:
+            subtitle_label = MDLabel(
+                text=self.subtitle,
+                font_style="Body2",
+                theme_text_color="Secondary",
+                adaptive_size=True
+            )
+            text_layout.add_widget(subtitle_label)
+        
+        header.add_widget(text_layout)
+        layout.add_widget(header)
+        
+        self.add_widget(layout)
+    
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            # Animación de press
+            anim = Animation(
+                elevation=4, 
+                duration=0.1,
+                transition='out_quad'
+            )
+            anim.start(self)
+        return super().on_touch_down(touch)
+
+class GradientButton(MDButton):
+    """Botón con efecto gradiente moderno"""
+    
+    gradient_start = ColorProperty([0.41, 0.31, 0.64, 1])  # Primary
+    gradient_end = ColorProperty([0.51, 0.41, 0.74, 1])   # Primary light
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.elevation = 2
+        self.radius = dp(8)
+
+class StatsWidget(ModernCard):
+    """Widget de estadísticas moderno"""
+    
+    value = StringProperty("0")
+    trend = StringProperty("")  # "+12%", "-5%", etc.
+    value_color = ColorProperty([0.05, 0.42, 0.25, 1])  # Success color
+    
+    def build_content(self):
+        super().build_content()
+        
+        # Valor principal
+        value_layout = MDBoxLayout(orientation="horizontal", spacing=dp(8))
+        
+        value_label = MDLabel(
+            text=self.value,
+            font_style="H4",
+            theme_text_color="Custom",
+            text_color=self.value_color,
+            bold=True,
+            adaptive_size=True
+        )
+        value_layout.add_widget(value_label)
+        
+        if self.trend:
+            trend_label = MDLabel(
+                text=self.trend,
+                font_style="Body2",
+                theme_text_color="Custom",
+                text_color=self.value_color,
+                adaptive_size=True
+            )
+            value_layout.add_widget(trend_label)
+        
+        self.ids.content.add_widget(value_layout)
+
+class ModernTextField(MDBoxLayout):
+    """Campo de texto moderno con label flotante"""
+    
+    hint_text = StringProperty("")
+    text = StringProperty("")
+    error_text = StringProperty("")
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.orientation = "vertical"
+        self.spacing = dp(4)
+        self.build_field()
+    
+    def build_field(self):
+        """Construir campo de texto"""
+        from kivymd.uix.textfield import MDTextField
+        
+        self.text_field = MDTextField(
+            hint_text=self.hint_text,
+            text=self.text,
+            mode="rectangle",
+            radius=dp(8)
+        )
+        self.add_widget(self.text_field)

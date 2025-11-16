@@ -1,0 +1,1249 @@
+# views/caja/caja_screen.py
+from kivymd.uix.screen import MDScreen
+from kivy.properties import BooleanProperty, StringProperty, NumericProperty, ListProperty
+from kivy.clock import Clock
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.button import Button
+from kivy.uix.textinput import TextInput
+from kivy.uix.popup import Popup
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.gridlayout import GridLayout
+from kivymd.app import MDApp
+import psycopg2
+from kivy.graphics import Color, RoundedRectangle, Rectangle
+
+
+
+class CajaScreen(MDScreen):
+    caja_abierta = BooleanProperty(False)
+    estado_caja = StringProperty("Verificando...")
+    total_ventas = NumericProperty(0.0)
+    pedidos_pendientes = ListProperty([])
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.caja_service = None
+        self.usuario_actual = None
+
+    def on_enter(self):
+        """Cuando se muestra la pantalla"""
+        print("💰 Entrando a Módulo Caja")
+        self.inicializar_servicios()
+        self.verificar_estado_caja()
+        self.cargar_pedidos_pendientes()
+
+    def inicializar_servicios(self):
+        """Inicializar servicios de caja"""
+        if not self.caja_service:
+            try:
+                from services.database_service import PostgreSQLService
+                from services.caja_service import CajaService
+                from services.ticket_service_caja import TicketServiceCaja
+                from services.config_service import ConfigService 
+                from kivymd.app import MDApp
+
+                app = MDApp.get_running_app()
+                self.usuario_actual = app.usuario_actual
+
+                db = PostgreSQLService()
+                self.caja_service = CajaService(db)
+
+                 # Inicializar ConfigService primero
+                config_service = ConfigService(db)
+                self.ticket_service = TicketServiceCaja(db, config_service)  # NUEVO
+                print("✅ Servicios de caja, configuracion y tickets inicializados")
+            except Exception as e:
+                print(f"❌ Error inicializando servicios: {e}")
+
+    def verificar_estado_caja(self):
+        """Verificar si la caja está abierta"""
+        if self.caja_service:
+            self.caja_abierta = self.caja_service.verificar_caja_abierta()
+            self.estado_caja = "Caja ABIERTA ✅" if self.caja_abierta else "Caja CERRADA 🔒"
+
+            if self.caja_abierta:
+                self.actualizar_estadisticas()
+
+    def cargar_pedidos_pendientes(self):
+        """Cargar pedidos listos para pagar"""
+        if self.caja_service and self.caja_abierta:
+            self.pedidos_pendientes = self.caja_service.obtener_pedidos_pendientes_pago()
+            print(f"📦 {len(self.pedidos_pendientes)} pedidos pendientes de pago")
+            self.actualizar_ui_pedidos()
+
+    def actualizar_estadisticas(self):
+        """Actualizar estadísticas de ventas"""
+        if self.caja_service:
+            ventas = self.caja_service.obtener_ventas_dia()
+            self.total_ventas = ventas['total_monto']
+
+            if hasattr(self, 'ids') and 'label_estadisticas' in self.ids:
+                texto = f"Ventas Hoy: ${ventas['total_monto']:.2f} | "
+                texto += f"Efectivo: ${ventas['efectivo']:.2f} | "
+                texto += f"Tarjeta: ${ventas['tarjeta']:.2f} | "
+                texto += f"Transferencia: ${ventas['transferencia']:.2f}"
+                self.ids.label_estadisticas.text = texto
+
+    def actualizar_ui_pedidos(self):
+        """Actualizar UI con pedidos pendientes"""
+        if hasattr(self, 'ids') and 'contenedor_pedidos' in self.ids:
+            self.ids.contenedor_pedidos.clear_widgets()
+
+            if not self.pedidos_pendientes:
+                empty_label = Label(
+                    text="🎉 No hay pedidos pendientes de pago",
+                    size_hint_y=None,
+                    height=100,
+                    font_size='18sp',
+                    color=(0.5, 0.5, 0.5, 1),
+                    italic=True
+                )
+                self.ids.contenedor_pedidos.add_widget(empty_label)
+            else:
+                for pedido in self.pedidos_pendientes:
+                    pedido_widget = self.crear_widget_pedido(pedido)
+                    self.ids.contenedor_pedidos.add_widget(pedido_widget)
+
+    def crear_widget_pedido(self, pedido):
+        """Crear widget para un pedido pendiente - CORREGIDO"""
+        # Layout principal
+        main_layout = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            height=150,
+            spacing=5,
+            padding=[10, 10, 10, 10]
+        )
+
+        # Cabecera
+        header_layout = BoxLayout(
+            orientation='horizontal',
+            size_hint_y=None,
+            height=40,
+            spacing=10
+        )
+
+        header_layout.add_widget(Label(
+            text=f"Pedido #{pedido['id']}",
+            size_hint_x=0.3,
+            bold=True,
+            font_size='16sp'
+        ))
+
+        header_layout.add_widget(Label(
+            text=f"Mesa: {pedido['mesa']}",
+            size_hint_x=0.3,
+            font_size='14sp'
+        ))
+
+        header_layout.add_widget(Label(
+            text=f"Total: ${pedido['total']:.2f}",
+            size_hint_x=0.4,
+            bold=True,
+            font_size='14sp',
+            color=(0.2, 0.6, 0.2, 1)
+        ))
+
+        main_layout.add_widget(header_layout)
+
+        # Items
+        items_text = " | ".join(
+            [f"{item['nombre']} x{item['cantidad']}" for item in pedido['items'][:3]])
+        if len(pedido['items']) > 3:
+            items_text += f" ... (+{len(pedido['items']) - 3})"
+
+        items_label = Label(
+            text=items_text,
+            size_hint_y=None,
+            height=30,
+            font_size='12sp',
+            text_size=(400, None),
+            halign='left'
+        )
+        main_layout.add_widget(items_label)
+
+        # Botones de pago - CORREGIDOS
+        botones_layout = BoxLayout(
+            orientation='horizontal',
+            size_hint_y=None,
+            height=40,
+            spacing=5
+        )
+
+        btn_efectivo = Button(
+            text='EFECTIVO',
+            background_color=(0.2, 0.7, 0.2, 1),
+            background_normal='',
+            on_press=lambda x, p=pedido: self.procesar_pago(
+                p['id'], p['total'], 'efectivo')
+        )
+
+        btn_tarjeta = Button(
+            text='TARJETA',
+            background_color=(0.2, 0.6, 1, 1),
+            background_normal='',
+            on_press=lambda x, p=pedido: self.procesar_pago(
+                p['id'], p['total'], 'tarjeta')
+        )
+
+        btn_transferencia = Button(
+            text='TRANSFERENCIA',
+            background_color=(0.8, 0.4, 0.1, 1),
+            background_normal='',
+            on_press=lambda x, p=pedido: self.procesar_pago(
+                p['id'], p['total'], 'transferencia')
+        )
+
+        botones_layout.add_widget(btn_efectivo)
+        botones_layout.add_widget(btn_tarjeta)
+        botones_layout.add_widget(btn_transferencia)
+
+        main_layout.add_widget(botones_layout)
+
+        return main_layout
+
+    def abrir_caja(self):
+        """Abrir caja con fondo inicial"""
+        if not self.usuario_actual:
+            self.mostrar_error("No hay usuario logueado")
+            return
+
+        content = BoxLayout(orientation='vertical', spacing=10, padding=20)
+        content.add_widget(Label(
+            text="Ingrese el fondo inicial:",
+            font_size='16sp',
+            halign='center'
+        ))
+
+        input_fondo = TextInput(
+            hint_text='Ej: 1000.00',
+            multiline=False,
+            input_filter='float',
+            size_hint_y=None,
+            height=40
+        )
+        content.add_widget(input_fondo)
+
+        btn_layout = BoxLayout(orientation='horizontal',
+                               spacing=10, size_hint_y=None, height=40)
+        btn_cancelar = Button(
+            text='CANCELAR', background_color=(0.8, 0.3, 0.3, 1))
+        btn_confirmar = Button(
+            text='ABRIR CAJA', background_color=(0.2, 0.7, 0.2, 1))
+
+        btn_layout.add_widget(btn_cancelar)
+        btn_layout.add_widget(btn_confirmar)
+        content.add_widget(btn_layout)
+
+        popup = Popup(
+            title='Abrir Caja',
+            content=content,
+            size_hint=(0.7, 0.4)
+        )
+
+        def confirmar_abrir(instance):
+            try:
+                fondo = float(input_fondo.text)
+                if fondo <= 0:
+                    self.mostrar_error("El fondo debe ser mayor a 0")
+                    return
+
+                if self.caja_service.abrir_caja(self.usuario_actual['id'], fondo):
+                    self.verificar_estado_caja()
+                    self.mostrar_popup_mensaje(
+                        f"✅ Caja abierta\nFondo: ${fondo:.2f}")
+                else:
+                    self.mostrar_error("Error abriendo caja")
+
+                popup.dismiss()
+            except ValueError:
+                self.mostrar_error("Ingrese un monto válido")
+
+        btn_cancelar.bind(on_press=popup.dismiss)
+        btn_confirmar.bind(on_press=confirmar_abrir)
+        popup.open()
+
+    def procesar_pago(self, pedido_id, monto, metodo_pago):
+        
+        app = MDApp.get_running_app()
+            
+            # Verificar permisos
+        if not app.auth_service.puede_cerrar_pedidos(app.usuario_actual):
+            self.mostrar_error(
+                "❌ PERMISO DENEGADO\n\n" +
+                "Solo personal autorizado (Cajero/Administrador) " +
+                "puede procesar pagos."
+            )
+            return
+        """Procesar pago de un pedido - CON CÁLCULO DE CAMBIO MEJORADO"""
+        if not self.caja_abierta:
+            self.mostrar_error(
+                "La caja debe estar abierta para procesar pagos")
+            return
+
+        if not self.usuario_actual:
+            self.mostrar_error("No hay usuario logueado")
+            return
+
+        if metodo_pago == 'efectivo':
+            self.mostrar_popup_cambio(pedido_id, monto)
+        else:
+            # Para tarjeta y transferencia, procesar directamente
+            if self.procesar_pago_directo(pedido_id, monto, metodo_pago):
+                self.mostrar_popup_mensaje(
+                    f"✅ Pago procesado\nPedido #{pedido_id}\n${monto:.2f} ({metodo_pago})")
+                self.cargar_pedidos_pendientes()
+                self.actualizar_estadisticas()
+
+    def mostrar_popup_cambio(self, pedido_id, monto):
+        """Mostrar popup para ingresar monto recibido y calcular cambio"""
+        content = BoxLayout(orientation='vertical', spacing=10, padding=20)
+
+        # Título
+        content.add_widget(Label(
+            text=f"PEDIDO #{pedido_id}\nTotal: ${monto:.2f}",
+            font_size='18sp',
+            halign='center',
+            bold=True
+        ))
+
+        # Input para monto recibido
+        content.add_widget(Label(
+            text="MONTO RECIBIDO:",
+            font_size='16sp',
+            halign='center'
+        ))
+
+        input_monto = TextInput(
+            hint_text=f'Ingrese monto recibido...',
+            multiline=False,
+            input_filter='float',
+            size_hint_y=None,
+            height=50,
+            font_size='20sp',
+            halign='center'
+        )
+        content.add_widget(input_monto)
+
+        # Display de cambio
+        label_cambio = Label(
+            text="Cambio: $0.00",
+            font_size='16sp',
+            halign='center',
+            color=(0.2, 0.6, 0.2, 1),
+            bold=True
+        )
+        content.add_widget(label_cambio)
+
+        # Botones
+        btn_layout = BoxLayout(orientation='horizontal',
+                               spacing=10, size_hint_y=None, height=50)
+        btn_cancelar = Button(
+            text='CANCELAR', background_color=(0.8, 0.3, 0.3, 1))
+        btn_confirmar = Button(text='CONFIRMAR PAGO',
+                               background_color=(0.2, 0.7, 0.2, 1))
+
+        btn_layout.add_widget(btn_cancelar)
+        btn_layout.add_widget(btn_confirmar)
+        content.add_widget(btn_layout)
+
+        popup = Popup(
+            title='PAGO EN EFECTIVO - CALCULAR CAMBIO',
+            content=content,
+            size_hint=(0.8, 0.6)
+        )
+
+        def calcular_cambio(instance):
+            try:
+                monto_recibido = float(input_monto.text)
+                cambio = monto_recibido - monto
+
+                if cambio < 0:
+                    label_cambio.text = f"FALTAN: ${abs(cambio):.2f}"
+                    label_cambio.color = (0.8, 0.2, 0.2, 1)
+                    btn_confirmar.disabled = True
+                else:
+                    label_cambio.text = f"Cambio: ${cambio:.2f}"
+                    label_cambio.color = (0.2, 0.6, 0.2, 1)
+                    btn_confirmar.disabled = False
+
+            except ValueError:
+                label_cambio.text = "Ingrese un monto válido"
+                label_cambio.color = (0.8, 0.2, 0.2, 1)
+                btn_confirmar.disabled = True
+
+        def confirmar_pago(instance):
+            try:
+                monto_recibido = float(input_monto.text)
+                cambio = monto_recibido - monto
+
+                if cambio < 0:
+                    self.mostrar_error(
+                        f"Faltan ${abs(cambio):.2f} para completar el pago")
+                    return
+
+                # Procesar el pago
+                if self.procesar_pago_directo(pedido_id, monto, 'efectivo'):
+                    mensaje = f"✅ Pago en EFECTIVO\n"
+                    mensaje += f"Pedido #{pedido_id}\n"
+                    mensaje += f"Total: ${monto:.2f}\n"
+                    mensaje += f"Recibido: ${monto_recibido:.2f}\n"
+                    mensaje += f"Cambio: ${cambio:.2f}"
+
+                    self.mostrar_popup_mensaje(mensaje)
+                    self.cargar_pedidos_pendientes()
+                    self.actualizar_estadisticas()
+                    popup.dismiss()
+                else:
+                    self.mostrar_error("Error procesando pago")
+
+            except ValueError:
+                self.mostrar_error("Ingrese un monto válido")
+
+        # Actualizar cálculo en tiempo real
+        input_monto.bind(text=lambda instance,
+                         value: calcular_cambio(instance))
+
+        btn_cancelar.bind(on_press=popup.dismiss)
+        btn_confirmar.bind(on_press=confirmar_pago)
+
+        popup.open()
+
+    def procesar_pago_directo(self, pedido_id, monto, metodo_pago):
+        """Método auxiliar para procesar pagos directamente"""
+        if self.caja_service:
+            return self.caja_service.registrar_pago(pedido_id, self.usuario_actual['id'], monto, metodo_pago)
+        return False
+
+    def mostrar_popup_mensaje(self, mensaje):
+        """Mostrar mensaje en popup"""
+        content = BoxLayout(orientation='vertical', spacing=10, padding=20)
+        content.add_widget(Label(
+            text=mensaje,
+            font_size='16sp',
+            halign='center'
+        ))
+
+        btn_ok = Button(
+            text='OK',
+            size_hint_y=None,
+            height=40,
+            background_color=(0.2, 0.6, 1, 1)
+        )
+
+        content.add_widget(btn_ok)
+
+        popup = Popup(
+            title='Caja',
+            content=content,
+            size_hint=(0.6, 0.3)
+        )
+
+        btn_ok.bind(on_press=popup.dismiss)
+        popup.open()
+
+    def mostrar_error(self, mensaje):
+        """Mostrar mensaje de error"""
+        self.mostrar_popup_mensaje(f"❌ {mensaje}")
+
+    def forzar_actualizacion(self):
+        """Forzar actualización manual"""
+        print("🔄 Actualizando módulo caja...")
+        self.verificar_estado_caja()
+        self.cargar_pedidos_pendientes()
+
+    def cerrar_caja(self):
+        """Cerrar caja y mostrar reporte automático"""
+        if not self.caja_abierta:
+            self.mostrar_error("La caja ya está cerrada")
+            return
+
+        if not self.usuario_actual:
+            self.mostrar_error("No hay usuario logueado")
+            return
+
+        # Primero generar el reporte para revisión
+        reporte = self.caja_service.generar_reporte_cierre(
+            self.usuario_actual['id'])
+
+        if 'error' in reporte:
+            self.mostrar_error(f"Error generando reporte: {reporte['error']}")
+            return
+
+        self.mostrar_reporte_cierre(reporte)
+
+    def mostrar_reporte_cierre(self, reporte):
+        """Mostrar reporte detallado de cierre"""
+        from kivy.uix.scrollview import ScrollView
+        from kivy.uix.gridlayout import GridLayout
+
+        content = BoxLayout(orientation='vertical', spacing=10, padding=20)
+
+        # Título
+        titulo = Label(
+            text="📊 REPORTE DE CIERRE DE CAJA",
+            font_size='20sp',
+            bold=True,
+            halign='center',
+            size_hint_y=None,
+            height=50
+        )
+        content.add_widget(titulo)
+
+        # Scrollable content
+        scroll_content = ScrollView()
+        main_layout = BoxLayout(orientation='vertical',
+                                spacing=15, size_hint_y=None)
+        main_layout.bind(minimum_height=main_layout.setter('height'))
+
+        # Información básica
+        info_layout = GridLayout(
+            cols=2, spacing=10, size_hint_y=None, height=200)
+        info_layout.add_widget(Label(text="Fecha:", bold=True))
+        info_layout.add_widget(Label(text=reporte['fecha']))
+        info_layout.add_widget(Label(text="Empleado:", bold=True))
+        info_layout.add_widget(Label(text=reporte['empleado']))
+        info_layout.add_widget(Label(text="Fondo Inicial:", bold=True))
+        info_layout.add_widget(Label(text=f"${reporte['fondo_inicial']:.2f}"))
+        info_layout.add_widget(Label(text="Total Ventas:", bold=True))
+        info_layout.add_widget(Label(text=f"${reporte['total_ventas']:.2f}"))
+        info_layout.add_widget(Label(text="Total Cierre:", bold=True))
+        info_layout.add_widget(
+            Label(text=f"${reporte['total_cierre']:.2f}", color=(0.2, 0.6, 0.2, 1)))
+
+        main_layout.add_widget(info_layout)
+
+        # Resumen por método de pago
+        resumen_label = Label(
+            text="💳 RESUMEN POR MÉTODO DE PAGO",
+            font_size='16sp',
+            bold=True,
+            size_hint_y=None,
+            height=30
+        )
+        main_layout.add_widget(resumen_label)
+
+        metodos_layout = GridLayout(
+            cols=3, spacing=10, size_hint_y=None, height=100)
+        metodos_layout.add_widget(Label(text="EFECTIVO", bold=True))
+        metodos_layout.add_widget(Label(text="TARJETA", bold=True))
+        metodos_layout.add_widget(Label(text="TRANSFERENCIA", bold=True))
+
+        metodos_layout.add_widget(
+            Label(text=f"${reporte['total_efectivo']:.2f}"))
+        metodos_layout.add_widget(
+            Label(text=f"${reporte['total_tarjeta']:.2f}"))
+        metodos_layout.add_widget(
+            Label(text=f"${reporte['total_transferencia']:.2f}"))
+
+        main_layout.add_widget(metodos_layout)
+
+        # Productos más vendidos
+        if reporte['productos_top']:
+            productos_label = Label(
+                text="🏆 PRODUCTOS MÁS VENDIDOS",
+                font_size='16sp',
+                bold=True,
+                size_hint_y=None,
+                height=30
+            )
+            main_layout.add_widget(productos_label)
+
+            for i, producto in enumerate(reporte['productos_top'][:5], 1):
+                prod_layout = BoxLayout(
+                    orientation='horizontal', size_hint_y=None, height=30)
+                prod_layout.add_widget(
+                    Label(text=f"{i}. {producto['nombre']}", text_size=(200, None), halign='left'))
+                prod_layout.add_widget(Label(text=f"x{producto['cantidad']}"))
+                prod_layout.add_widget(
+                    Label(text=f"${producto['ingreso']:.2f}"))
+                main_layout.add_widget(prod_layout)
+
+        # Input para observaciones
+        main_layout.add_widget(Label(
+            text="Observaciones (opcional):",
+            size_hint_y=None,
+            height=30,
+            bold=True
+        ))
+
+        input_observaciones = TextInput(
+            hint_text='Ej: Faltante de $50, Propinas, etc.',
+            multiline=True,
+            size_hint_y=None,
+            height=80
+        )
+        main_layout.add_widget(input_observaciones)
+
+        scroll_content.add_widget(main_layout)
+        content.add_widget(scroll_content)
+
+        # Botones de acción
+        btn_layout = BoxLayout(orientation='horizontal',
+                               spacing=10, size_hint_y=None, height=50)
+        btn_cancelar = Button(
+            text='CANCELAR', background_color=(0.8, 0.3, 0.3, 1))
+        btn_confirmar = Button(text='CONFIRMAR CIERRE',
+                               background_color=(0.2, 0.7, 0.2, 1))
+
+        btn_layout.add_widget(btn_cancelar)
+        btn_layout.add_widget(btn_confirmar)
+        content.add_widget(btn_layout)
+
+        popup = Popup(
+            title='CORTE DE CAJA AUTOMÁTICO',
+            content=content,
+            size_hint=(0.9, 0.9)
+        )
+
+        def confirmar_cierre(instance):
+            observaciones = input_observaciones.text.strip()
+
+            if self.caja_service.cerrar_caja(self.usuario_actual['id'], observaciones):
+                self.verificar_estado_caja()
+                self.mostrar_popup_mensaje(
+                    "✅ Caja cerrada exitosamente\n📊 Reporte generado")
+            else:
+                self.mostrar_error("Error cerrando caja")
+
+            popup.dismiss()
+
+        btn_cancelar.bind(on_press=popup.dismiss)
+        btn_confirmar.bind(on_press=confirmar_cierre)
+        popup.open()
+
+    def ver_historial_cierres(self):
+        """Ver historial de cierres de caja"""
+        historial = self.caja_service.obtener_historial_cierres(
+            7)  # Últimos 7 días
+
+        if not historial:
+            self.mostrar_popup_mensaje(
+                "No hay historial de cierres disponibles")
+            return
+
+        content = BoxLayout(orientation='vertical', spacing=10, padding=20)
+
+        titulo = Label(
+            text="📅 HISTORIAL DE CIERRES (Últimos 7 días)",
+            font_size='18sp',
+            bold=True,
+            halign='center',
+            size_hint_y=None,
+            height=50
+        )
+        content.add_widget(titulo)
+
+        scroll = ScrollView()
+        main_layout = GridLayout(cols=1, spacing=10, size_hint_y=None)
+        main_layout.bind(minimum_height=main_layout.setter('height'))
+
+        for cierre in historial:
+            cierre_card = self.crear_card_historial(cierre)
+            main_layout.add_widget(cierre_card)
+
+        scroll.add_widget(main_layout)
+        content.add_widget(scroll)
+
+        btn_cerrar = Button(
+            text='CERRAR',
+            size_hint_y=None,
+            height=50,
+            background_color=(0.3, 0.5, 0.8, 1)
+        )
+
+        content.add_widget(btn_cerrar)
+
+        popup = Popup(
+            title='Historial de Cierres',
+            content=content,
+            size_hint=(0.95, 0.9)
+        )
+
+        btn_cerrar.bind(on_press=popup.dismiss)
+        popup.open()
+
+    def crear_card_historial(self, cierre):
+        """Crear tarjeta para item del historial"""
+        card = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            height=120,
+            padding=10,
+            spacing=5
+        )
+
+        # Fondo de tarjeta
+        with card.canvas.before:
+            Color(rgba=(0.95, 0.95, 0.95, 1))
+            self.bg_rect = RoundedRectangle(
+                pos=card.pos,
+                size=card.size,
+                radius=[10]
+            )
+
+        # Actualizar posición y tamaño del fondo si el card cambia
+        def update_bg_rect(instance, value):
+            self.bg_rect.pos = card.pos
+            self.bg_rect.size = card.size
+
+        card.bind(pos=update_bg_rect, size=update_bg_rect)
+
+        # Fecha y empleado
+        header = BoxLayout(orientation='horizontal', size_hint_y=None, height=30)
+        header.add_widget(Label(text=f"📅 {cierre['fecha']}", bold=True, size_hint_x=0.6))
+        header.add_widget(Label(text=f"👤 {cierre['empleado']}", size_hint_x=0.4))
+        card.add_widget(header)
+
+        # Totales
+        totales = BoxLayout(orientation='horizontal', size_hint_y=None, height=25)
+        totales.add_widget(Label(text=f"Fondo: ${cierre['fondo_inicial']:.2f}"))
+        totales.add_widget(Label(text=f"Ventas: ${cierre['total_ventas']:.2f}"))
+        totales.add_widget(Label(text=f"Cierre: ${cierre['total_cierre']:.2f}", color=(0.2, 0.6, 0.2, 1)))
+        card.add_widget(totales)
+
+        # Métodos de pago
+        metodos = BoxLayout(orientation='horizontal', size_hint_y=None, height=25)
+        metodos.add_widget(Label(text=f"💵 ${cierre['total_efectivo']:.2f}"))
+        metodos.add_widget(Label(text=f"💳 ${cierre['total_tarjeta']:.2f}"))
+        metodos.add_widget(Label(text=f"📲 ${cierre['total_transferencia']:.2f}"))
+        card.add_widget(metodos)
+
+        # Observaciones
+        if cierre['observaciones']:
+            obs = Label(
+                text=f"📝 {cierre['observaciones']}",
+                font_size='10sp',
+                size_hint_y=None,
+                height=20,
+                text_size=(400, None),
+                halign='left'
+            )
+            card.add_widget(obs)
+
+        return card
+    
+    #ARQUEO DE CAJA
+
+    def realizar_arqueo(self):
+        """Realizar arqueo de caja"""
+        if not self.caja_abierta:
+            self.mostrar_error("La caja debe estar abierta para realizar arqueo")
+            return
+        
+        if not self.usuario_actual:
+            self.mostrar_error("No hay usuario logueado")
+            return
+        
+        # Primero calcular el efectivo teórico
+        teorico_data = self.caja_service.calcular_efectivo_teorico()
+        
+        if 'error' in teorico_data:
+            self.mostrar_error(f"Error calculando efectivo teórico: {teorico_data['error']}")
+            return
+        
+        self.mostrar_popup_arqueo(teorico_data)
+
+    def mostrar_popup_arqueo(self, teorico_data):
+        """Mostrar popup para realizar arqueo"""
+        content = BoxLayout(orientation='vertical', spacing=15, padding=20)
+        
+        # Título
+        content.add_widget(Label(
+            text="💰 ARQUEO DE CAJA",
+            font_size='20sp',
+            bold=True,
+            halign='center',
+            size_hint_y=None,
+            height=50
+        ))
+        
+        # Información teórica
+        info_layout = GridLayout(cols=2, spacing=10, size_hint_y=None, height=120)
+        
+        info_layout.add_widget(Label(text="Fondo Inicial:", bold=True))
+        info_layout.add_widget(Label(text=f"${teorico_data['fondo_inicial']:.2f}"))
+        
+        info_layout.add_widget(Label(text="Ventas Efectivo:", bold=True))
+        info_layout.add_widget(Label(text=f"${teorico_data['ventas_efectivo']:.2f}"))
+        
+        info_layout.add_widget(Label(text="Devoluciones:", bold=True))
+        info_layout.add_widget(Label(text=f"${teorico_data['devoluciones_efectivo']:.2f}"))
+        
+        info_layout.add_widget(Label(text="EFECTIVO TEÓRICO:", bold=True, color=(0.2, 0.2, 0.8, 1)))
+        info_layout.add_widget(Label(text=f"${teorico_data['efectivo_teorico']:.2f}", 
+                                color=(0.2, 0.2, 0.8, 1), bold=True))
+        
+        content.add_widget(info_layout)
+        
+        # Separador
+        separator = BoxLayout(size_hint_y=None, height=1)
+        with separator.canvas.before:
+            Color(0.7, 0.7, 0.7, 0.5)  # gris semitransparente
+            rect = Rectangle(pos=separator.pos, size=separator.size)
+
+        # Actualizar posición y tamaño del rectángulo cuando cambie el layout
+        def update_rect(instance, value):
+            rect.pos = instance.pos
+            rect.size = instance.size
+
+        separator.bind(pos=update_rect, size=update_rect)
+
+        content.add_widget(separator)
+        
+        # Input para efectivo físico
+        content.add_widget(Label(
+            text="EFECTIVO FÍSICO CONTADO:",
+            font_size='16sp',
+            bold=True,
+            halign='center',
+            size_hint_y=None,
+            height=30
+        ))
+        
+        input_fisico = TextInput(
+            hint_text='Ingrese el monto físico contado...',
+            multiline=False,
+            input_filter='float',
+            size_hint_y=None,
+            height=60,
+            font_size='20sp',
+            halign='center'
+        )
+        content.add_widget(input_fisico)
+        
+        # Display de resultado
+        resultado_label = Label(
+            text="Ingrese el efectivo físico contado",
+            font_size='16sp',
+            halign='center',
+            size_hint_y=None,
+            height=40
+        )
+        content.add_widget(resultado_label)
+        
+        # Input para observaciones
+        content.add_widget(Label(
+            text="Observaciones:",
+            size_hint_y=None,
+            height=30,
+            bold=True
+        ))
+        
+        input_observaciones = TextInput(
+            hint_text='Ej: Billetes de $500, monedas, etc.',
+            multiline=True,
+            size_hint_y=None,
+            height=80
+        )
+        content.add_widget(input_observaciones)
+        
+        # Botones
+        btn_layout = BoxLayout(orientation='horizontal', spacing=10, size_hint_y=None, height=50)
+        btn_cancelar = Button(text='CANCELAR', background_color=(0.8, 0.3, 0.3, 1))
+        btn_registrar = Button(text='REGISTRAR ARQUEO', background_color=(0.2, 0.7, 0.2, 1))
+        
+        btn_layout.add_widget(btn_cancelar)
+        btn_layout.add_widget(btn_registrar)
+        content.add_widget(btn_layout)
+        
+        popup = Popup(
+            title='CONTROL DE EFECTIVO - ARQUEO',
+            content=content,
+            size_hint=(0.85, 0.8)
+        )
+        
+        def calcular_resultado(instance):
+            try:
+                efectivo_fisico = float(input_fisico.text)
+                efectivo_teorico = teorico_data['efectivo_teorico']
+                diferencia = efectivo_fisico - efectivo_teorico
+                
+                if abs(diferencia) <= 0.10:  # ±10 centavos
+                    resultado_label.text = f"✅ CUADRADO - Diferencia: ${diferencia:.2f}"
+                    resultado_label.color = (0.2, 0.6, 0.2, 1)
+                elif diferencia > 0:
+                    resultado_label.text = f"⚠️ SOBRANTE: +${diferencia:.2f}"
+                    resultado_label.color = (0.8, 0.5, 0.1, 1)
+                else:
+                    resultado_label.text = f"❌ FALTANTE: -${abs(diferencia):.2f}"
+                    resultado_label.color = (0.8, 0.2, 0.2, 1)
+                    
+            except ValueError:
+                resultado_label.text = "Ingrese un monto válido"
+                resultado_label.color = (0.8, 0.2, 0.2, 1)
+        
+        def registrar_arqueo(instance):
+            try:
+                efectivo_fisico = float(input_fisico.text)
+                observaciones = input_observaciones.text.strip()
+                
+                resultado = self.caja_service.registrar_arqueo(
+                    self.usuario_actual['id'], 
+                    efectivo_fisico, 
+                    observaciones
+                )
+                
+                if resultado['success']:
+                    mensaje = f"✅ ARQUEO REGISTRADO\n\n"
+                    mensaje += f"Teórico: ${resultado['efectivo_teorico']:.2f}\n"
+                    mensaje += f"Físico: ${resultado['efectivo_fisico']:.2f}\n"
+                    mensaje += f"Diferencia: ${resultado['diferencia']:.2f}\n"
+                    mensaje += f"Estado: {resultado['estado'].upper()}"
+                    
+                    self.mostrar_popup_mensaje(mensaje)
+                    popup.dismiss()
+                else:
+                    self.mostrar_error(f"Error registrando arqueo: {resultado['error']}")
+                    
+            except ValueError:
+                self.mostrar_error("Ingrese un monto válido para el efectivo físico")
+        
+        # Calcular en tiempo real
+        input_fisico.bind(text=lambda instance, value: calcular_resultado(instance))
+        
+        btn_cancelar.bind(on_press=popup.dismiss)
+        btn_registrar.bind(on_press=registrar_arqueo)
+        
+        popup.open()
+
+    def ver_historial_arqueos(self):
+        """Ver historial de arqueos"""
+        historial = self.caja_service.obtener_historial_arqueos(7)  # Últimos 7 días
+        
+        if not historial:
+            self.mostrar_popup_mensaje("No hay historial de arqueos disponibles")
+            return
+        
+        content = BoxLayout(orientation='vertical', spacing=10, padding=20)
+        
+        titulo = Label(
+            text="📊 HISTORIAL DE ARQUEOS (Últimos 7 días)",
+            font_size='18sp',
+            bold=True,
+            halign='center',
+            size_hint_y=None,
+            height=50
+        )
+        content.add_widget(titulo)
+        
+        scroll = ScrollView()
+        main_layout = GridLayout(cols=1, spacing=10, size_hint_y=None)
+        main_layout.bind(minimum_height=main_layout.setter('height'))
+        
+        for arqueo in historial:
+            arqueo_card = self.crear_card_arqueo(arqueo)
+            main_layout.add_widget(arqueo_card)
+        
+        scroll.add_widget(main_layout)
+        content.add_widget(scroll)
+        
+        btn_cerrar = Button(
+            text='CERRAR',
+            size_hint_y=None,
+            height=50,
+            background_color=(0.3, 0.5, 0.8, 1)
+        )
+        
+        content.add_widget(btn_cerrar)
+        
+        popup = Popup(
+            title='Historial de Arqueos',
+            content=content,
+            size_hint=(0.95, 0.9)
+        )
+        
+        btn_cerrar.bind(on_press=popup.dismiss)
+        popup.open()
+
+    def crear_card_arqueo(self, arqueo):
+        """Crear tarjeta para item del historial de arqueos"""
+        card = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            height=140,
+            padding=10,
+            spacing=5
+        )
+        
+        # Fondo de tarjeta
+        with card.canvas.before:
+            Color(rgba=(0.95, 0.95, 0.95, 1))
+            self.bg_rect = RoundedRectangle(
+                pos=card.pos,
+                size=card.size,
+                radius=[10]
+            )
+        
+        # Fecha y empleado
+        header = BoxLayout(orientation='horizontal', size_hint_y=None, height=30)
+        header.add_widget(Label(text=f"📅 {arqueo['fecha']}", bold=True, size_hint_x=0.6))
+        header.add_widget(Label(text=f"👤 {arqueo['empleado']}", size_hint_x=0.4))
+        card.add_widget(header)
+        
+        # Efectivos
+        efectivos = BoxLayout(orientation='horizontal', size_hint_y=None, height=25)
+        efectivos.add_widget(Label(text=f"Teórico: ${arqueo['efectivo_teorico']:.2f}"))
+        efectivos.add_widget(Label(text=f"Físico: ${arqueo['efectivo_fisico']:.2f}"))
+        card.add_widget(efectivos)
+        
+        # Diferencia y estado
+        diferencia_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=30)
+        diferencia_layout.add_widget(Label(text=f"Diferencia: ${arqueo['diferencia']:.2f}"))
+        
+        estado_label = Label(
+            text=arqueo['estado'].upper(),
+            color=arqueo['color_estado'],
+            bold=True
+        )
+        diferencia_layout.add_widget(estado_label)
+        card.add_widget(diferencia_layout)
+        
+        # Observaciones
+        if arqueo['observaciones']:
+            obs = Label(
+                text=f"📝 {arqueo['observaciones']}",
+                font_size='10sp',
+                size_hint_y=None,
+                height=20,
+                text_size=(400, None),
+                halign='left'
+            )
+            card.add_widget(obs)
+        
+        return card
+
+#ticket
+    def procesar_pago_directo(self, pedido_id, monto, metodo_pago):
+        """Método auxiliar para procesar pagos directamente - ACTUALIZADO"""
+        if self.caja_service:
+            success = self.caja_service.registrar_pago(pedido_id, self.usuario_actual['id'], monto, metodo_pago)
+            
+            if success:
+                # Generar e imprimir ticket automáticamente
+                self.imprimir_ticket_pago(pedido_id)
+            
+            return success
+        return False
+
+    def imprimir_ticket_pago(self, pedido_id):
+        """Imprimir ticket de pago"""
+        try:
+            if not hasattr(self, 'ticket_service') or not self.ticket_service:
+                print("⚠️ Servicio de tickets no disponible")
+                return
+             # Verificar que el pedido esté pagado (CANDADO)
+            if not self.verificar_pedido_pagado(pedido_id):
+                self.mostrar_error("El pedido debe ser pagado antes de imprimir el ticket")
+                return
+            # Generar ticket
+            ticket_data = self.ticket_service.generar_ticket_pago(pedido_id)
+            
+            if 'error' in ticket_data:
+                print(f"❌ Error generando ticket: {ticket_data['error']}")
+                return
+            
+            # Formatear como texto
+            ticket_text = self.ticket_service.formatear_ticket_texto(ticket_data)
+            
+            # Imprimir (o guardar archivo en desarrollo)
+            self.ticket_service.imprimir_ticket(ticket_text)
+            
+            # Mostrar preview opcional
+            self.mostrar_preview_ticket(ticket_text)
+            
+            print(f"✅ Ticket impreso para pedido #{pedido_id}")
+            
+        except Exception as e:
+            print(f"❌ Error imprimiendo ticket: {e}")
+
+    def mostrar_preview_ticket(self, ticket_text):
+        """Mostrar preview del ticket en pantalla"""
+        content = BoxLayout(orientation='vertical', spacing=10, padding=20)
+        
+        # Título
+        content.add_widget(Label(
+            text="🎫 VISTA PREVIA DEL TICKET",
+            font_size='18sp',
+            bold=True,
+            halign='center',
+            size_hint_y=None,
+            height=40
+        ))
+        
+        # Área de texto con scroll para el ticket
+        scroll = ScrollView(size_hint=(1, 0.8))
+        ticket_display = Label(
+            text=ticket_text,
+            font_name='Courier',  # Fuente monoespaciada para tickets
+            font_size='12sp',
+            text_size=(400, None),
+            halign='left',
+            size_hint_y=None
+        )
+        ticket_display.bind(texture_size=ticket_display.setter('size'))
+        scroll.add_widget(ticket_display)
+        content.add_widget(scroll)
+        
+        # Botones
+        btn_layout = BoxLayout(orientation='horizontal', spacing=10, size_hint_y=None, height=50)
+        btn_imprimir_otra = Button(text='IMPRIMIR OTRA VEZ', background_color=(0.2, 0.6, 1, 1))
+        btn_cerrar = Button(text='CERRAR', background_color=(0.5, 0.5, 0.5, 1))
+        
+        btn_layout.add_widget(btn_imprimir_otra)
+        btn_layout.add_widget(btn_cerrar)
+        content.add_widget(btn_layout)
+        
+        popup = Popup(
+            title='Preview de Ticket',
+            content=content,
+            size_hint=(0.8, 0.9)
+        )
+        
+        def reimprimir(instance):
+            # Aquí podrías re-imprimir si es necesario
+            popup.dismiss()
+        
+        btn_imprimir_otra.bind(on_press=reimprimir)
+        btn_cerrar.bind(on_press=popup.dismiss)
+        popup.open()
+
+    def imprimir_ticket_cocina(self, pedido_id):
+        """Imprimir ticket para cocina"""
+        try:
+            if not hasattr(self, 'ticket_service') or not self.ticket_service:
+                print("⚠️ Servicio de tickets no disponible")
+                return
+            
+            ticket_text = self.ticket_service.generar_ticket_cocina(pedido_id)
+            self.ticket_service.imprimir_ticket(ticket_text, "COCINA")
+            print(f"✅ Ticket cocina impreso para pedido #{pedido_id}")
+            
+        except Exception as e:
+            print(f"❌ Error imprimiendo ticket cocina: {e}")
+        """Método de prueba para tickets de cocina"""
+        if self.pedidos_pendientes:
+            pedido_id = self.pedidos_pendientes[0]['id']
+            self.imprimir_ticket_cocina(pedido_id)
+            self.mostrar_popup_mensaje(f"Ticket de cocina generado para pedido #{pedido_id}")
+        else:
+            self.mostrar_popup_mensaje("No hay pedidos para generar ticket de cocina")
+
+   
+        """Método de prueba para tickets de cocina"""
+        if self.pedidos_pendientes:
+            pedido_id = self.pedidos_pendientes[0]['id']
+            self.imprimir_ticket_cocina(pedido_id)
+            self.mostrar_popup_mensaje(f"Ticket de cocina generado para pedido #{pedido_id}")
+        else:
+            self.mostrar_popup_mensaje("No hay pedidos para generar ticket de cocina")       
+
+    def verificar_pedido_pagado(self, pedido_id) -> bool:
+        """Verificar si un pedido ha sido pagado (CANDADO)"""
+        try:
+            conn = psycopg2.connect(**self.caja_service.db.conn_params)
+            cur = conn.cursor()
+            
+            cur.execute("""
+                SELECT COUNT(*) 
+                FROM movimientos_caja 
+                WHERE pedido_id = %s AND tipo = 'venta'
+            """, (pedido_id,))
+            
+            count = cur.fetchone()[0]
+            cur.close()
+            conn.close()
+            
+            return count > 0
+            
+        except Exception as e:
+            print(f"❌ Error verificando pago: {e}")
+            return False
+        
+    def test_ticket(self):
+        
+        """Método de prueba para tickets - CON CANDADO"""
+        if not self.pedidos_pendientes:
+            self.mostrar_popup_mensaje("No hay pedidos pendientes para generar ticket")
+            return
+        
+        pedido_id = self.pedidos_pendientes[0]['id']
+        
+        # Verificar si está pagado
+        if not self.verificar_pedido_pagado(pedido_id):
+            self.mostrar_popup_mensaje(
+                "❌ CANDADO ACTIVADO\n\n" +
+                "Este pedido no ha sido pagado.\n" +
+                "Debe procesar el pago primero para imprimir el ticket."
+            )
+            return
+        
+        print(f"🔄 Generando ticket para pedido #{pedido_id}")
+        self.imprimir_ticket_pago(pedido_id)
+        # Verificar que el pedido existe en la base de datos
+        try:
+            conn = psycopg2.connect(**self.caja_service.db.conn_params)
+            cur = conn.cursor()
+            cur.execute("SELECT id FROM pedidos WHERE id = %s", (pedido_id,))
+            if not cur.fetchone():
+                self.mostrar_popup_mensaje(f"Pedido #{pedido_id} no existe en la base de datos")
+                cur.close()
+                conn.close()
+                return
+            cur.close()
+            conn.close()
+        except Exception as e:
+            print(f"❌ Error verificando pedido: {e}")
+        
+        print(f"🔄 Generando ticket para pedido #{pedido_id}")
+        self.imprimir_ticket_pago(pedido_id)
+
+    def test_ticket_cocina(self):
+        """Método de prueba para tickets de cocina - MEJORADO"""
+        if not self.pedidos_pendientes:
+            self.mostrar_popup_mensaje("No hay pedidos pendientes para generar ticket de cocina")
+            return
+        
+        pedido_id = self.pedidos_pendientes[0]['id']
+        print(f"🔄 Generando ticket de cocina para pedido #{pedido_id}")
+        
+        try:
+            if not hasattr(self, 'ticket_service') or not self.ticket_service:
+                self.mostrar_popup_mensaje("Servicio de tickets no disponible")
+                return
+            
+            ticket_text = self.ticket_service.generar_ticket_cocina(pedido_id)
+            
+            if ticket_text.startswith("Error:"):
+                self.mostrar_popup_mensaje(f"Error generando ticket: {ticket_text}")
+                return
+            
+            self.ticket_service.imprimir_ticket(ticket_text, "COCINA")
+            self.mostrar_popup_mensaje(f"✅ Ticket de cocina generado\npara pedido #{pedido_id}")
+            
+        except Exception as e:
+            print(f"❌ Error imprimiendo ticket cocina: {e}")
+            self.mostrar_popup_mensaje(f"Error: {e}")
+
+    def debug_pedidos(self):
+        """Método de debug para verificar pedidos"""
+        print("\n🔍 DEBUG PEDIDOS PENDIENTES:")
+        print(f"Total pedidos en lista: {len(self.pedidos_pendientes)}")
+        
+        for i, pedido in enumerate(self.pedidos_pendientes):
+            print(f"Pedido {i+1}: ID={pedido['id']}, Mesa={pedido['mesa']}, Total=${pedido['total']}")
+        
+        # Verificar en base de datos
+        try:
+            conn = psycopg2.connect(**self.caja_service.db.conn_params)
+            cur = conn.cursor()
+            cur.execute("SELECT id, mesa, total, estado FROM pedidos WHERE estado = 'listo'")
+            pedidos_db = cur.fetchall()
+            print(f"Pedidos en BD (estado='listo'): {len(pedidos_db)}")
+            for pedido in pedidos_db:
+                print(f"  BD: ID={pedido[0]}, Mesa={pedido[1]}, Total=${pedido[2]}, Estado={pedido[3]}")
+            cur.close()
+            conn.close()
+        except Exception as e:
+            print(f"❌ Error consultando BD: {e}")

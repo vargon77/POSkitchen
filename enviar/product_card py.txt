@@ -1,0 +1,32 @@
+# widgets/product_card.py (VERSIÓN SIMPLIFICADA)
+from kivy.uix.button import Button
+from kivy.properties import StringProperty, NumericProperty
+
+class ProductCard(Button):
+    nombre = StringProperty("")
+    precio = NumericProperty(0.0)
+    product_id = NumericProperty(0)
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.size_hint = (None, None)
+        self.size = ("160dp", "120dp")
+        self.text = f"{self.nombre}\n${self.precio:.2f}"
+        self.background_color = (0.2, 0.6, 1, 1)  # Azul bonito
+        self.color = (1, 1, 1, 1)  # Texto blanco
+        self.bold = True
+    
+    def on_press(self):
+        """Cuando se hace clic en el botón"""
+        from kivymd.app import MDApp
+        app = MDApp.get_running_app()
+        
+        # Buscar la pantalla de pedidos activa
+        for screen in app.root.ids.screen_manager.screens:
+            if hasattr(screen, 'mostrar_dialogo_producto'):
+                screen.mostrar_dialogo_producto({
+                    'id': self.product_id,
+                    'nombre': self.nombre,
+                    'precio': self.precio
+                })
+                break

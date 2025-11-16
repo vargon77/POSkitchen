@@ -1,0 +1,327 @@
+# views/pedidos/cierre_cuenta_screen.kv 
+<CierreCuentaScreen>:
+    name: "cierre_cuenta"
+    
+    BoxLayout:
+        orientation: "vertical"
+        spacing: "5dp"
+        padding: "10dp"
+
+        # ============ ENCABEZADO ============
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: "60dp"
+            spacing: "10dp"
+
+            Button:
+                text: "← VOLVER"
+                size_hint_x: None
+                width: "100dp"
+                background_color: (0.3, 0.5, 0.8, 1)
+                on_release: root.volver_al_menu()
+
+            # Selector de Mesa con info
+            BoxLayout:
+                orientation: "vertical"
+                spacing: "2dp"
+                
+                Spinner:
+                    id: selector_mesa
+                    text: "Seleccionar Mesa"
+                    values: root.mesas_disponibles
+                    size_hint_y: 0.6
+                    background_color: (0.2, 0.6, 0.9, 1)
+                    on_text: root.cargar_pedidos_mesa(self.text)
+                
+                Label:
+                    id: label_info_mesa
+                    text: ""
+                    size_hint_y: 0.4
+                    font_size: "11sp"
+                    color: (0.6, 0.6, 0.6, 1)
+
+        # ============ CONTENIDO PRINCIPAL ============
+        BoxLayout:
+            orientation: "horizontal"
+            spacing: "10dp"
+
+            # --- PANEL IZQUIERDO: LISTA DE PEDIDOS ---
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_x: 0.35
+                spacing: "5dp"
+
+                Label:
+                    text: "PEDIDOS DE LA MESA"
+                    size_hint_y: None
+                    height: "30dp"
+                    bold: True
+                    font_size: "14sp"
+                    canvas.before:
+                        Color:
+                            rgba: 0.9, 0.9, 0.9, 1
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+
+                ScrollView:
+                    canvas.before:
+                        Color:
+                            rgba: 0.95, 0.95, 0.95, 1
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [5]
+                    
+                    GridLayout:
+                        id: lista_pedidos
+                        cols: 1
+                        size_hint_y: None
+                        height: self.minimum_height
+                        spacing: "5dp"
+                        padding: "5dp"
+
+            # --- PANEL DERECHO: DETALLE Y ACCIONES ---
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_x: 0.65
+                spacing: "5dp"
+
+                # Info del pedido seleccionado
+                BoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: None
+                    height: "35dp"
+                    padding: "10dp"
+                    spacing: "10dp"
+                    canvas.before:
+                        Color:
+                            rgba: 0.85, 0.9, 0.95, 1
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [5]
+
+                    Label:
+                        id: label_pedido_actual
+                        text: "Seleccione un pedido"
+                        bold: True
+                        size_hint_x: 0.5
+
+                    Label:
+                        id: label_total_pedido
+                        text: "Total: $0.00"
+                        bold: True
+                        size_hint_x: 0.3
+                        halign: "right"
+                    
+                    Button:
+                        text: "PAGAR TODO"
+                        size_hint_x: 0.2
+                        background_color: (0.2, 0.7, 0.2, 1)
+                        disabled: True
+                        id: btn_pagar_todo
+                        on_release: root.pagar_pedido_completo()
+
+                # Detalle de items
+                BoxLayout:
+                    orientation: "vertical"
+                    spacing: "5dp"
+
+                    BoxLayout:
+                        orientation: "horizontal"
+                        size_hint_y: None
+                        height: "30dp"
+                        
+                        Label:
+                            text: "DETALLE DE PRODUCTOS"
+                            bold: True
+                            size_hint_x: 0.7
+
+                        ToggleButton:
+                            id: toggle_dividir
+                            text: "MODO: DIVISIÓN"
+                            size_hint_x: 0.3
+                            background_color: (0.8, 0.4, 0.2, 1)
+                            state: "normal"
+                            on_state: root.cambiar_modo_division(self.state)
+
+                    # Encabezado de columnas
+                    BoxLayout:
+                        orientation: "horizontal"
+                        size_hint_y: None
+                        height: "25dp"
+                        padding: [5, 0]
+                        canvas.before:
+                            Color:
+                                rgba: 0.7, 0.7, 0.7, 1
+                            Rectangle:
+                                pos: self.pos
+                                size: self.size
+
+                        Label:
+                            text: "☐"
+                            size_hint_x: 0.08
+                            font_size: "12sp"
+                            id: check_all
+                        Label:
+                            text: "Producto"
+                            size_hint_x: 0.42
+                            font_size: "12sp"
+                            bold: True
+                        Label:
+                            text: "Cant"
+                            size_hint_x: 0.15
+                            font_size: "12sp"
+                            bold: True
+                        Label:
+                            text: "P.Unit"
+                            size_hint_x: 0.15
+                            font_size: "12sp"
+                            bold: True
+                        Label:
+                            text: "Subtotal"
+                            size_hint_x: 0.2
+                            font_size: "12sp"
+                            bold: True
+
+                    ScrollView:
+                        canvas.before:
+                            Color:
+                                rgba: 0.98, 0.98, 0.98, 1
+                            Rectangle:
+                                pos: self.pos
+                                size: self.size
+                        
+                        GridLayout:
+                            id: detalle_items
+                            cols: 1
+                            size_hint_y: None
+                            height: self.minimum_height
+                            spacing: "2dp"
+                            padding: "5dp"
+
+                # Panel de acciones
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: "180dp"
+                    spacing: "5dp"
+
+                    # Métodos de pago
+                    BoxLayout:
+                        orientation: "horizontal"
+                        size_hint_y: None
+                        height: "35dp"
+                        spacing: "5dp"
+
+                        Label:
+                            text: "MÉTODO:"
+                            size_hint_x: 0.2
+                            bold: True
+
+                        ToggleButton:
+                            id: btn_efectivo
+                            text: "EFECTIVO"
+                            group: "metodo_pago"
+                            size_hint_x: 0.2
+                            background_color: (0.3, 0.6, 0.3, 1)
+                            on_state: if self.state == 'down': root.metodo_pago = "efectivo"
+
+                        ToggleButton:
+                            id: btn_tarjeta
+                            text: "TARJETA"
+                            group: "metodo_pago"
+                            size_hint_x: 0.2
+                            background_color: (0.4, 0.5, 0.8, 1)
+                            on_state: if self.state == 'down': root.metodo_pago = "tarjeta"
+
+                        ToggleButton:
+                            id: btn_transfer
+                            text: "TRANSFER"
+                            group: "metodo_pago"
+                            size_hint_x: 0.2
+                            background_color: (0.6, 0.3, 0.7, 1)
+                            on_state: if self.state == 'down': root.metodo_pago = "transferencia"
+
+                        ToggleButton:
+                            id: btn_mixto
+                            text: "MIXTO"
+                            group: "metodo_pago"
+                            size_hint_x: 0.2
+                            background_color: (0.8, 0.6, 0.2, 1)
+                            on_state: if self.state == 'down': root.metodo_pago = "mixto"
+
+                    # Descuentos y división
+                    BoxLayout:
+                        orientation: "horizontal"
+                        size_hint_y: None
+                        height: "40dp"
+                        spacing: "5dp"
+
+                        Button:
+                            text: "DESCUENTO %"
+                            background_color: (0.8, 0.5, 0.2, 1)
+                            on_release: root.aplicar_descuento("porcentaje")
+
+                        Button:
+                            text: "DESCUENTO $"
+                            background_color: (0.7, 0.4, 0.2, 1)
+                            on_release: root.aplicar_descuento("monto")
+
+                        Button:
+                            text: "DIVIDIR ÷N"
+                            background_color: (0.5, 0.3, 0.8, 1)
+                            on_release: root.dividir_entre_personas()
+
+                    # Total y botón principal
+                    BoxLayout:
+                        orientation: "horizontal"
+                        size_hint_y: None
+                        height: "50dp"
+                        padding: "10dp"
+                        spacing: "10dp"
+                        canvas.before:
+                            Color:
+                                rgba: 0.8, 0.95, 0.8, 1
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [5]
+
+                        Label:
+                            text: "TOTAL A PAGAR:"
+                            bold: True
+                            font_size: "16sp"
+                            size_hint_x: 0.5
+
+                        Label:
+                            id: label_total_final
+                            text: "$0.00"
+                            bold: True
+                            font_size: "18sp"
+                            size_hint_x: 0.3
+                            halign: "right"
+                            color: (0, 0.5, 0, 1)
+
+                        Button:
+                            id: btn_generar_ticket
+                            text: "GENERAR\nTICKET"
+                            size_hint_x: 0.2
+                            background_color: (0.2, 0.7, 0.2, 1)
+                            disabled: True
+                            on_release: root.generar_ticket_parcial()
+
+                    # Info de tickets generados
+                    BoxLayout:
+                        orientation: "horizontal"
+                        size_hint_y: None
+                        height: "30dp"
+                        
+                        Label:
+                            id: label_tickets_info
+                            text: ""
+                            font_size: "11sp"
+                            color: (0.4, 0.4, 0.8, 1)
+                            italic: True

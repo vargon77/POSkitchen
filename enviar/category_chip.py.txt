@@ -1,0 +1,12 @@
+from kivymd.uix.chip import MDChip
+from kivy.properties import StringProperty
+from kivymd.app import MDApp
+
+class CategoryChip(MDChip):
+    categoria = StringProperty("")
+    
+    def on_press(self):
+        # Buscar la pantalla de menú para filtrar productos
+        app = MDApp.get_running_app()
+        menu_screen = app.root.ids.screen_manager.get_screen("menu")
+        menu_screen.filtrar_por_categoria(self.categoria)

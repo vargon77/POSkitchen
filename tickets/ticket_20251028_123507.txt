@@ -1,0 +1,24 @@
+========================================
+            RESTAURANTE POS             
+           Av. Principal #123           
+Tel:              (555) 123-4567             
+RFC:               POS010101ABC              
+========================================
+Ticket: #21
+Fecha: 28/10/2025 18:35
+Mesa: 1
+Mesero: Juan Pérez
+Pago: EFECTIVO
+Estado: ENTREGADO
+----------------------------------------
+CANT DESCRIPCION                    TOTAL
+----------------------------------------
+ 2 x Pizza Margarita$ 360.00
+----------------------------------------
+Subtotal:                      $ 360.00
+IVA (16%):                     $  57.60
+TOTAL:                         $ 417.60
+========================================
+      ¡Gracias por su preferencia!      
+      *** COMPROBANTE DE PAGO ***       
+========================================

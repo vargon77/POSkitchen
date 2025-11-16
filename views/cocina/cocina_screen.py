@@ -1,0 +1,375 @@
+# views/cocina/cocina_screen.py
+from kivymd.uix.screen import MDScreen
+from kivy.properties import ListProperty, NumericProperty, StringProperty
+from kivy.clock import Clock
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.button import Button
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.popup import Popup
+
+class CocinaScreen(MDScreen):
+    pedidos = ListProperty([])
+    total_pedidos = NumericProperty(0)
+    estadisticas = StringProperty("Cargando...")
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cocina_service = None
+        self.actualizar_event = None
+    
+    def on_enter(self):
+        """Cuando se muestra la pantalla"""
+        print("👨‍🍳 Entrando a Vista Cocina")
+        self.inicializar_servicios()
+        self.cargar_pedidos()
+        
+        # Actualizar automáticamente cada 10 segundos
+        self.actualizar_event = Clock.schedule_interval(lambda dt: self.cargar_pedidos(), 10)
+    
+    def on_leave(self):
+        """Cuando se sale de la pantalla"""
+        if self.actualizar_event:
+            self.actualizar_event.cancel()
+            print("⏹️ Deteniendo actualización automática")
+    
+    def inicializar_servicios(self):
+        """Inicializar servicios de cocina"""
+        if not self.cocina_service:
+            try:
+                from services.database_service import PostgreSQLService
+                from services.cocina_service import CocinaService
+                
+                db = PostgreSQLService()
+                self.cocina_service = CocinaService(db)
+                print("✅ Servicios de cocina inicializados")
+            except Exception as e:
+                print(f"❌ Error inicializando servicios: {e}")
+    
+    def cargar_pedidos(self):
+        """Cargar pedidos activos - MÉTODO FALTANTE"""
+        if not self.cocina_service:
+            print("❌ No hay servicio de cocina")
+            return
+        
+        print("👨‍🍳 Cargando pedidos para cocina...")
+        
+        self.pedidos = self.cocina_service.obtener_pedidos_activos()
+        self.total_pedidos = len(self.pedidos)
+        
+        # Cargar estadísticas
+        stats = self.cocina_service.obtener_estadisticas_cocina()
+        self.actualizar_estadisticas(stats)
+        
+        # Actualizar UI
+        self.actualizar_ui_pedidos()
+        
+        print(f"✅ {len(self.pedidos)} pedidos cargados")
+    
+    def calcular_tiempo_espera(self, created_at):
+        """Calcular tiempo de espera - UNA SOLA VEZ"""
+        from datetime import datetime
+        try:
+            if isinstance(created_at, str):
+                # Si es string, convertir a datetime
+                created_at = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S')
+            
+            ahora = datetime.now()
+            diferencia = ahora - created_at
+            minutos = int(diferencia.total_seconds() / 60)
+            
+            if minutos < 1:
+                return "Recién llegado"
+            elif minutos < 5:
+                return f"{minutos} min"
+            elif minutos < 10:
+                return f"{minutos} min ⚠️"
+            else:
+                return f"{minutos} min 🔴"
+        except:
+            return "Tiempo N/A"
+    
+    def actualizar_estadisticas(self, stats):
+        """Actualizar texto de estadísticas"""
+        if stats['por_estado']:
+            texto = "📊 "
+            for estado, count in stats['por_estado'].items():
+                texto += f"{estado}: {count} | "
+            texto += f"Total: {stats['total_activos']}"
+            self.estadisticas = texto
+        else:
+            self.estadisticas = "📊 No hay pedidos activos"
+    
+    def actualizar_ui_pedidos(self):
+        """Actualizar la UI con los pedidos"""
+        if hasattr(self, 'ids') and 'contenedor_pedidos' in self.ids:
+            self.ids.contenedor_pedidos.clear_widgets()
+            
+            if not self.pedidos:
+                # Mostrar mensaje si no hay pedidos
+                empty_label = Label(
+                    text="🎉 No hay pedidos activos para cocina",
+                    size_hint_y=None,
+                    height=100,
+                    font_size='18sp',
+                    color=(0.5, 0.5, 0.5, 1),
+                    italic=True
+                )
+                self.ids.contenedor_pedidos.add_widget(empty_label)
+            else:
+                # Crear widget para cada pedido
+                for pedido in self.pedidos:
+                    pedido_widget = self.crear_widget_pedido(pedido)
+                    self.ids.contenedor_pedidos.add_widget(pedido_widget)
+    
+    def crear_widget_pedido(self, pedido):
+        """Crear widget visual mejorado para un pedido"""
+        # Layout principal del pedido
+        main_layout = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            height=180 + (len(pedido['items']) * 25),  # Altura dinámica según items
+            spacing=5,
+            padding=[10, 10, 10, 10]
+        )
+        
+        # Cabecera del pedido
+        header_layout = BoxLayout(
+            orientation='horizontal',
+            size_hint_y=None,
+            height=40,
+            spacing=10
+        )
+        
+        header_layout.add_widget(Label(
+            text=f"Pedido #{pedido['id']}",
+            size_hint_x=0.3,
+            bold=True,
+            font_size='16sp'
+        ))
+        
+        header_layout.add_widget(Label(
+            text=f"Mesa: {pedido['mesa']}",
+            size_hint_x=0.3,
+            font_size='14sp'
+        ))
+        
+        estado_label = Label(
+            text=f"Estado: {pedido['estado'].upper()}",
+            size_hint_x=0.4,
+            bold=True,
+            font_size='14sp'
+        )
+        
+        # Color del texto según estado
+        if pedido['estado'] == 'pendiente':
+            estado_label.color = (0.8, 0.8, 0.2, 1)  # Amarillo
+        elif pedido['estado'] == 'preparacion':
+            estado_label.color = (0.9, 0.6, 0.2, 1)  # Naranja
+        elif pedido['estado'] == 'listo':
+            estado_label.color = (0.2, 0.7, 0.2, 1)  # Verde
+        else:
+            estado_label.color = (0.5, 0.5, 0.5, 1)  # Gris
+        
+        header_layout.add_widget(estado_label)
+        main_layout.add_widget(header_layout)
+        
+        # Info del mesero y tiempo MEJORADO
+        info_layout = BoxLayout(
+            orientation='horizontal',
+            size_hint_y=None,
+            height=25,
+            spacing=10
+        )
+        
+        info_layout.add_widget(Label(
+            text=f"Mesero: {pedido['mesero']}",
+            size_hint_x=0.5,
+            font_size='12sp'
+        ))
+        
+        # Tiempo de espera calculado
+        tiempo_espera = self.calcular_tiempo_espera(pedido['created_at'])
+        color_tiempo = (0.2, 0.6, 0.2, 1) if "Recién" in tiempo_espera else (0.8, 0.4, 0.1, 1)
+        
+        tiempo_label = Label(
+            text=tiempo_espera,
+            size_hint_x=0.5,
+            font_size='12sp',
+            color=color_tiempo,
+            bold=True
+        )
+        
+        info_layout.add_widget(tiempo_label)
+        main_layout.add_widget(info_layout)
+        
+        # Items del pedido
+        items_layout = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            height=len(pedido['items']) * 25,
+            spacing=2
+        )
+        
+        for item in pedido['items']:
+            item_text = f"• {item['nombre']} x{item['cantidad']}"
+            if item.get('notas'):
+                item_text += f" ({item['notas']})"
+            
+            item_label = Label(
+                text=item_text,
+                size_hint_y=None,
+                height=25,
+                font_size='12sp',
+                text_size=(400, None),
+                halign='left'
+            )
+            items_layout.add_widget(item_label)
+        
+        main_layout.add_widget(items_layout)
+        
+        # Botones de acción
+        botones_layout = BoxLayout(
+            orientation='horizontal',
+            size_hint_y=None,
+            height=40,
+            spacing=5
+        )
+        
+        # Botones según estado actual
+        if pedido['estado'] in ['pendiente', 'confirmado']:
+            btn_preparar = Button(
+                text='INICIAR PREPARACIÓN',
+                background_color=(0.9, 0.6, 0.2, 1),
+                on_press=lambda x, p=pedido: self.cambiar_estado(p['id'], 'preparacion')
+            )
+            botones_layout.add_widget(btn_preparar)
+        
+        if pedido['estado'] == 'preparacion':
+            btn_listo = Button(
+                text='MARCAR COMO LISTO',
+                background_color=(0.2, 0.7, 0.2, 1),
+                on_press=lambda x, p=pedido: self.cambiar_estado(p['id'], 'listo')
+            )
+            botones_layout.add_widget(btn_listo)
+        
+        if pedido['estado'] == 'listo':
+            btn_entregado = Button(
+                text='ENTREGADO',
+                background_color=(0.2, 0.6, 1, 1),
+                on_press=lambda x, p=pedido: self.cambiar_estado(p['id'], 'entregado')
+            )
+            botones_layout.add_widget(btn_entregado)
+        
+        main_layout.add_widget(botones_layout)
+        
+        return main_layout
+    
+    def cambiar_estado(self, pedido_id, nuevo_estado):
+        """Cambiar estado de un pedido"""
+        print(f"🔄 Cambiando pedido {pedido_id} a {nuevo_estado}")
+        
+        if self.cocina_service and self.cocina_service.cambiar_estado_pedido(pedido_id, nuevo_estado):
+            # Recargar pedidos después de cambiar estado
+            Clock.schedule_once(lambda dt: self.cargar_pedidos(), 0.5)
+            
+            # Mostrar mensaje de confirmación
+            self.mostrar_popup_mensaje(f"✅ Pedido {pedido_id} cambiado a {nuevo_estado}")
+        else:
+            self.mostrar_popup_mensaje(f"❌ Error cambiando estado del pedido")
+    
+    def mostrar_popup_mensaje(self, mensaje):
+        """Mostrar mensaje en popup"""
+        content = BoxLayout(orientation='vertical', spacing=10, padding=20)
+        content.add_widget(Label(
+            text=mensaje,
+            font_size='16sp',
+            halign='center'
+        ))
+        
+        btn_ok = Button(
+            text='OK',
+            size_hint_y=None,
+            height=40,
+            background_color=(0.2, 0.6, 1, 1)
+        )
+        
+        content.add_widget(btn_ok)
+        
+        popup = Popup(
+            title='Cocina',
+            content=content,
+            size_hint=(0.6, 0.3)
+        )
+        
+        btn_ok.bind(on_press=popup.dismiss)
+        popup.open()
+    
+    def forzar_actualizacion(self):
+        """Forzar actualización manual"""
+        print("🔄 Actualización manual solicitada")
+        self.cargar_pedidos()
+
+    def marcar_como_listo(self, pedido_id):
+        """Marcar pedido como listo para servir"""
+        if self.pedido_service.cambiar_estado_pedido(pedido_id, 'listo', self.usuario_actual['id']):
+            # Reproducir sonido de notificación
+            self.reproducir_sonido_listo()
+            self.mostrar_notificacion_meseros(pedido_id)
+            self.cargar_pedidos_pendientes()
+            
+    def marcar_como_entregado(self, pedido_id):
+        """Marcar pedido como entregado al cliente"""
+        if self.pedido_service.cambiar_estado_pedido(pedido_id, 'entregado', self.usuario_actual['id']):
+            self.cargar_pedidos_pendientes()
+
+    def reproducir_sonido_listo(self):
+        """Reproducir sonido de notificación"""
+        try:
+            # Sonido simple (podría ser un archivo .wav)
+            import winsound
+            winsound.Beep(1000, 500)  # Frecuencia 1000Hz, duración 500ms
+        except:
+            print("🔊 Sonido de notificación (simulado)")
+
+    def mostrar_notificacion_meseros(self, pedido_id):
+        """Mostrar notificación para meseros"""
+        from kivy.clock import Clock
+        Clock.schedule_once(lambda dt: self.mostrar_popup_notificacion(pedido_id), 1)
+
+    def mostrar_popup_notificacion(self, pedido_id):
+        """Popup de notificación para meseros"""
+        content = BoxLayout(orientation='vertical', spacing=10, padding=20)
+        content.add_widget(Label(
+            text=f"🎉 PEDIDO LISTO\n\nPedido #{pedido_id} está listo para servir",
+            font_size='18sp',
+            halign='center',
+            bold=True
+        ))
+        
+        btn_ok = Button(
+            text='ENTENDIDO',
+            size_hint_y=None,
+            height=50,
+            background_color=(0.2, 0.7, 0.2, 1)
+        )
+        
+        content.add_widget(btn_ok)
+        
+        popup = Popup(
+            title='NOTIFICACIÓN COCINA',
+            content=content,
+            size_hint=(0.7, 0.4)
+        )
+        
+        btn_ok.bind(on_press=popup.dismiss)
+        popup.open()
+
+# cargar_pedidos_pendientes para usar estados
+def cargar_pedidos_pendientes(self):
+    """Cargar pedidos en preparación"""
+    if self.pedido_service:
+        # Cambiar a estado 'preparacion' en lugar de 'pendiente'
+        self.pedidos_pendientes = self.pedido_service.obtener_pedidos_por_estado('preparacion')
+        print(f"👨‍🍳 {len(self.pedidos_pendientes)} pedidos en preparación")
+        self.actualizar_ui_pedidos()

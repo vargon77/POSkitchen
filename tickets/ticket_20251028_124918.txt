@@ -1,0 +1,25 @@
+========================================
+            RESTAURANTE POS             
+           Av. Principal #123           
+Tel:              (555) 123-4567             
+RFC:               POS010101ABC              
+========================================
+Ticket: #23
+Fecha: 28/10/2025 18:49
+Mesa: 3
+Mesero: Juan Pérez
+Pago: TARJETA
+Estado: ENTREGADO
+----------------------------------------
+CANT DESCRIPCION                    TOTAL
+----------------------------------------
+ 3 x Ensalada César $ 285.00
+ 1 x Hamburguesa Clásic$ 120.00
+----------------------------------------
+Subtotal:                      $ 405.00
+IVA (16%):                     $  64.80
+TOTAL:                         $ 469.80
+========================================
+      ¡Gracias por su preferencia!      
+      *** COMPROBANTE DE PAGO ***       
+========================================

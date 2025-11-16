@@ -1,0 +1,336 @@
+# themes/global_styles.kv
+# Estilos globales para la aplicación POS
+# Compatible con Kivy 2.3.0 y KivyMD 1.2.0
+
+# ==================== BOTONES ESTILIZADOS ====================
+
+<PrimaryButton@Button>:
+    background_normal: ''
+    background_color: app.theme_cls.primary_color if hasattr(app.theme_cls, 'primary_color') else (1, 0.42, 0.21, 1)
+    color: (1, 1, 1, 1)
+    bold: True
+    font_size: '16sp'
+    size_hint_y: None
+    height: '48dp'
+    
+<SecondaryButton@Button>:
+    background_normal: ''
+    background_color: (0.18, 0.77, 0.71, 1)
+    color: (1, 1, 1, 1)
+    bold: True
+    font_size: '16sp'
+    size_hint_y: None
+    height: '48dp'
+
+<SuccessButton@Button>:
+    background_normal: ''
+    background_color: (0.18, 0.8, 0.44, 1)
+    color: (1, 1, 1, 1)
+    bold: True
+    font_size: '16sp'
+    size_hint_y: None
+    height: '48dp'
+
+<ErrorButton@Button>:
+    background_normal: ''
+    background_color: (0.91, 0.3, 0.24, 1)
+    color: (1, 1, 1, 1)
+    bold: True
+    font_size: '16sp'
+    size_hint_y: None
+    height: '48dp'
+
+<WarningButton@Button>:
+    background_normal: ''
+    background_color: (0.95, 0.61, 0.07, 1)
+    color: (1, 1, 1, 1)
+    bold: True
+    font_size: '16sp'
+    size_hint_y: None
+    height: '48dp'
+
+# Botón pequeño para móvil
+<SmallButton@Button>:
+    background_normal: ''
+    background_color: (0.3, 0.5, 0.8, 1)
+    color: (1, 1, 1, 1)
+    font_size: '14sp'
+    size_hint_y: None
+    height: '40dp'
+
+# ==================== TARJETAS ====================
+
+<Card@BoxLayout>:
+    orientation: 'vertical'
+    padding: '12dp'
+    spacing: '8dp'
+    size_hint_y: None
+    canvas.before:
+        Color:
+            rgba: (1, 1, 1, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [8]
+        Color:
+            rgba: (0.7, 0.7, 0.7, 0.3)
+        Line:
+            rounded_rectangle: [self.x, self.y, self.width, self.height, 8]
+            width: 1
+
+<ElevatedCard@BoxLayout>:
+    orientation: 'vertical'
+    padding: '16dp'
+    spacing: '10dp'
+    size_hint_y: None
+    canvas.before:
+        Color:
+            rgba: (1, 1, 1, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [10]
+        # Sombra simulada
+        Color:
+            rgba: (0, 0, 0, 0.1)
+        RoundedRectangle:
+            pos: [self.x, self.y - 2]
+            size: self.size
+            radius: [10]
+
+# ==================== LABELS ESTILIZADOS ====================
+
+<TitleLabel@Label>:
+    font_size: '24sp'
+    bold: True
+    color: (0.17, 0.24, 0.31, 1)
+    halign: 'left'
+    valign: 'middle'
+    size_hint_y: None
+    height: '40dp'
+
+<SubtitleLabel@Label>:
+    font_size: '18sp'
+    bold: True
+    color: (0.2, 0.29, 0.37, 1)
+    halign: 'left'
+    valign: 'middle'
+    size_hint_y: None
+    height: '30dp'
+
+<BodyLabel@Label>:
+    font_size: '14sp'
+    color: (0.5, 0.55, 0.56, 1)
+    halign: 'left'
+    valign: 'middle'
+    text_size: self.width, None
+    size_hint_y: None
+    height: self.texture_size[1]
+
+<CaptionLabel@Label>:
+    font_size: '12sp'
+    color: (0.5, 0.55, 0.56, 1)
+    halign: 'left'
+    italic: True
+
+# ==================== INPUTS ====================
+
+<StyledTextInput@TextInput>:
+    multiline: False
+    font_size: '16sp'
+    padding: ['12dp', '8dp']
+    size_hint_y: None
+    height: '48dp'
+    background_normal: ''
+    background_color: (0.96, 0.96, 0.96, 1)
+    foreground_color: (0.17, 0.24, 0.31, 1)
+    cursor_color: (1, 0.42, 0.21, 1)
+    canvas.before:
+        Color:
+            rgba: (0.74, 0.77, 0.79, 1)
+        Line:
+            rounded_rectangle: [self.x, self.y, self.width, self.height, 4]
+            width: 1
+
+# ==================== HEADERS ====================
+
+<ScreenHeader@BoxLayout>:
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: '60dp'
+    padding: '10dp'
+    spacing: '10dp'
+    canvas.before:
+        Color:
+            rgba: (0.95, 0.95, 0.95, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+# ==================== SEPARADORES ====================
+
+<HorizontalDivider@Widget>:
+    size_hint_y: None
+    height: '1dp'
+    canvas.before:
+        Color:
+            rgba: (0.74, 0.77, 0.79, 0.5)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+# ==================== CONTAINERS ====================
+
+<ScrollableContainer@ScrollView>:
+    bar_width: '8dp'
+    bar_color: (0.3, 0.5, 0.8, 0.6)
+    always_overscroll: False
+    do_scroll_x: False
+    
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint_y: None
+        height: self.minimum_height
+        spacing: '10dp'
+        padding: '10dp'
+
+# ==================== GRIDS RESPONSIVOS ====================
+
+<ProductGrid@GridLayout>:
+    cols: 2  # Por defecto móvil
+    spacing: '10dp'
+    padding: '10dp'
+    size_hint_y: None
+    height: self.minimum_height
+
+# ==================== CHIPS/TAGS ====================
+
+<CategoryChip@Button>:
+    background_normal: ''
+    background_color: (0.93, 0.94, 0.95, 1)
+    color: (0.17, 0.24, 0.31, 1)
+    font_size: '14sp'
+    size_hint: (None, None)
+    height: '36dp'
+    bold: False
+    
+<ActiveChip@CategoryChip>:
+    background_color: (1, 0.42, 0.21, 1)
+    color: (1, 1, 1, 1)
+    bold: True
+
+# ==================== MODALS/POPUPS ====================
+
+<ModalBackground@FloatLayout>:
+    canvas.before:
+        Color:
+            rgba: (0, 0, 0, 0.5)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<ModalContent@BoxLayout>:
+    orientation: 'vertical'
+    padding: '20dp'
+    spacing: '15dp'
+    canvas.before:
+        Color:
+            rgba: (1, 1, 1, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [10]
+
+# ==================== BADGES ====================
+
+<StatusBadge@Label>:
+    size_hint: (None, None)
+    size: ('80dp', '28dp')
+    font_size: '12sp'
+    bold: True
+    halign: 'center'
+    valign: 'middle'
+    canvas.before:
+        Color:
+            rgba: (0.5, 0.5, 0.5, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [14]
+
+<SuccessBadge@StatusBadge>:
+    color: (1, 1, 1, 1)
+    canvas.before:
+        Color:
+            rgba: (0.18, 0.8, 0.44, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [14]
+
+<WarningBadge@StatusBadge>:
+    color: (1, 1, 1, 1)
+    canvas.before:
+        Color:
+            rgba: (0.95, 0.61, 0.07, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [14]
+
+<ErrorBadge@StatusBadge>:
+    color: (1, 1, 1, 1)
+    canvas.before:
+        Color:
+            rgba: (0.91, 0.3, 0.24, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [14]
+
+# ==================== LISTAS ====================
+
+<ListItem@BoxLayout>:
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: '60dp'
+    padding: '10dp'
+    spacing: '10dp'
+    canvas.before:
+        Color:
+            rgba: (1, 1, 1, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+        Color:
+            rgba: (0.9, 0.9, 0.9, 1)
+        Line:
+            points: [self.x, self.y, self.x + self.width, self.y]
+            width: 1
+
+# ==================== ICONOS ====================
+
+<IconLabel@Label>:
+    font_size: '24sp'
+    size_hint: (None, None)
+    size: ('32dp', '32dp')
+    halign: 'center'
+    valign: 'middle'
+
+# ==================== UTILIDADES ====================
+
+<Spacer@Widget>:
+    size_hint_y: None
+    height: '10dp'
+
+<FlexSpacer@Widget>:
+    # Espaciador que toma todo el espacio disponible
+
+# ==================== CUSTOM SCROLLBAR ====================
+
+<CustomScrollView@ScrollView>:
+    bar_width: '6dp'
+    bar_color: (1, 0.42, 0.21, 0.7)
+    bar_inactive_color: (0.7, 0.7, 0.7, 0.3)
+    effect_cls: 'ScrollEffect'
+    smooth_scroll_end: 10

@@ -1,0 +1,112 @@
+# views/menu/menu_screen.kv - VERSIÓN RESPONSIVA
+# Usando el sistema de diseño
+
+<MenuScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        
+        # ==================== HEADER ====================
+        ScreenHeader:
+            Button:
+                text: "☰ Menú"
+                size_hint_x: 0.2
+                on_press: app.abrir_menu()
+                background_normal: ''
+                background_color: app.ds_color('primary') if hasattr(app, 'ds_color') else (1, 0.42, 0.21, 1)
+            
+            Label:
+                text: "Sistema POS"
+                font_size: app.ds_font('xl') if hasattr(app, 'ds_font') else '20sp'
+                bold: True
+                size_hint_x: 0.6
+                halign: 'center'
+            
+            Button:
+                text: "🌙"
+                size_hint_x: 0.2
+                on_press: app.toggle_theme()
+                background_normal: ''
+                background_color: app.ds_color('secondary') if hasattr(app, 'ds_color') else (0.18, 0.77, 0.71, 1)
+
+        # ==================== CONTENIDO PRINCIPAL ====================
+        CustomScrollView:
+            BoxLayout:
+                orientation: "vertical"
+                spacing: app.ds_spacing('lg') if hasattr(app, 'ds_spacing') else '20dp'
+                padding: app.ds_spacing('lg') if hasattr(app, 'ds_spacing') else '20dp'
+                size_hint_y: None
+                height: self.minimum_height
+
+                # Título principal
+                TitleLabel:
+                    text: "¡Bienvenido!"
+                    halign: 'center'
+
+                CaptionLabel:
+                    text: "Gestión completa para tu negocio"
+                    halign: 'center'
+                    size_hint_y: None
+                    height: '30dp'
+
+                Spacer:
+
+                # Grid de opciones - RESPONSIVO
+                ProductGrid:
+                    # El número de columnas se ajusta automáticamente
+                    cols: 2 if root.width < 768 else 3 if root.width < 1024 else 4
+                    
+                    # Opción: Tomar Pedido
+                    PrimaryButton:
+                        text: "🛒 Tomar Pedido"
+                        size_hint_y: None
+                        height: '80dp'
+                        on_press: app.cambiar_pantalla("pedidos")
+
+                    # Opción: Cocina
+                    SecondaryButton:
+                        text: "👨‍🍳 Cocina"
+                        size_hint_y: None
+                        height: '80dp'
+                        on_press: app.cambiar_pantalla("cocina")
+
+                    # Opción: Inventario
+                    WarningButton:
+                        text: "📦 Inventario"
+                        size_hint_y: None
+                        height: '80dp'
+                        on_press: app.cambiar_pantalla("inventario")
+
+                    # Opción: Caja
+                    SuccessButton:
+                        text: "💰 Caja"
+                        size_hint_y: None
+                        height: '80dp'
+                        on_press: app.cambiar_pantalla("caja")
+
+                    # Opción: Configuración
+                    Button:
+                        text: "⚙️ Config"
+                        size_hint_y: None
+                        height: '80dp'
+                        background_normal: ''
+                        background_color: (0.6, 0.3, 0.8, 1)
+                        color: (1, 1, 1, 1)
+                        bold: True
+                        on_press: app.cambiar_pantalla("config")
+
+                Spacer:
+
+                # Estado del sistema
+                ElevatedCard:
+                    height: '120dp'
+                    
+                    SubtitleLabel:
+                        text: "Estado del Sistema"
+                        halign: 'center'
+
+                    Label:
+                        id: status_label
+                        text: "Conectado a PostgreSQL"
+                        font_size: app.ds_font('base') if hasattr(app, 'ds_font') else '14sp'
+                        halign: 'center'
+                        color: app.ds_color('success') if hasattr(app, 'ds_color') else (0, 0.5, 0, 1)

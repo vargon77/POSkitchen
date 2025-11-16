@@ -1,0 +1,60 @@
+# widgets/order_item.kv  
+<OrderItem>:
+    orientation: "horizontal"
+    size_hint_y: None
+    height: "60dp"
+    spacing: "10dp"
+    padding: "5dp"
+
+    MDBoxLayout:
+        orientation: "vertical"
+        size_hint_x: 0.6
+        spacing: "2dp"
+
+        MDLabel:
+            text: root.nombre
+            font_style: "Body1"
+            adaptive_size: True
+            shorten: True
+            max_lines: 1
+
+        MDLabel:
+            text: f"Notas: {root.notas}" if root.notas else ""
+            font_style: "Caption"
+            theme_text_color: "Secondary"
+            adaptive_size: True
+            opacity: 1 if root.notas else 0
+
+    MDBoxLayout:
+        orientation: "horizontal"
+        size_hint_x: 0.4
+        spacing: "5dp"
+
+        MDIconButton:
+            icon: "minus"
+            size: "30dp", "30dp"
+            theme_icon_color: "Custom"
+            icon_color: app.theme_cls.error_color
+            on_release: app.root.disminuir_cantidad_item(root)
+
+        MDLabel:
+            text: str(root.cantidad)
+            halign: "center"
+            valign: "center"
+            font_style: "Body1"
+            size_hint_x: 0.3
+
+        MDIconButton:
+            icon: "plus" 
+            size: "30dp", "30dp"
+            theme_icon_color: "Custom"
+            icon_color: app.theme_cls.primary_color
+            on_release: app.root.aumentar_cantidad_item(root)
+
+        MDLabel:
+            text: f"${root.subtotal:.2f}"
+            halign: "right"
+            valign: "center"
+            font_style: "Body1"
+            bold: True
+            size_hint_x: 0.4

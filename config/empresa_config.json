@@ -1,0 +1,18 @@
+{
+    "empresa": {
+        "nombre": "COMEDERO ROSITA",
+        "direccion": "SAN JERONIMO 300",
+        "telefono": "2312344431",
+        "rfc": "XAXX010101000",
+        "leyenda_footer": "¡Gracias por su visita!"
+    },
+    "tickets": {
+        "imprimir_automaticamente": true,
+        "mostrar_preview": true,
+        "fuente_ticket": "Arial"
+    },
+    "seguridad": {
+        "rol_cierre_pedidos": "cajero",
+        "requiere_autorizacion_devoluciones": true
+    }
+}

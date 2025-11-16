@@ -1,0 +1,28 @@
+========================================
+            COMEDERO ROSITA             
+            SAN JERONIMO 300            
+Tel:                2312344431               
+RFC:              XAXX010101000              
+========================================
+Ticket: #41
+Fecha: 05/11/2025 20:48
+Mesa: 1
+Mesero: Juan Pérez
+Pago: EFECTIVO
+----------------------------------------
+CANT DESCRIPCION                    TOTAL
+----------------------------------------
+ 1 x Agua Mineral   $  15.00
+ 2 x Café Americano $  70.00
+ 1 x Coca-Cola      $  25.00
+ 2 x Ensalada César $ 190.00
+ 1 x Hamburguesa Clásic$ 120.00
+ 2 x Pizza Margarita$ 360.00
+----------------------------------------
+Subtotal:                      $ 780.00
+IVA (16%):                     $ 124.80
+TOTAL:                         $ 904.80
+========================================
+        ¡Gracias por su visita!         
+      *** COMPROBANTE DE PAGO ***       
+========================================

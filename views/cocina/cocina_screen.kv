@@ -1,0 +1,51 @@
+# views/cocina/cocina_screen.kv
+<CocinaScreen>:
+    BoxLayout:
+        orientation: "vertical"
+
+        # BARRA SUPERIOR
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: 0.1
+            padding: 10
+
+            Button:
+                text: "← Volver"
+                size_hint_x: 0.15
+                on_press: app.cambiar_pantalla("menu")
+            
+            Label:
+                text: "👨‍🍳 VISTA COCINA"
+                font_size: '20sp'
+                bold: True
+                size_hint_x: 0.7
+                halign: 'center'
+            
+            Button:
+                text: "🔄 Actualizar"
+                size_hint_x: 0.15
+                background_color: (0.3, 0.5, 0.8, 1)
+                on_press: root.forzar_actualizacion()
+
+        # ESTADÍSTICAS
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: 0.08
+            padding: 10
+
+            Label:
+                text: root.estadisticas
+                font_size: '14sp'
+                bold: True
+                halign: 'center'
+                text_size: self.width, None
+
+        # PEDIDOS ACTIVOS
+        ScrollView:
+            BoxLayout:
+                id: contenedor_pedidos
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 15
+                padding: 10

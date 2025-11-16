@@ -1,0 +1,115 @@
+# views/login/login_screen.kv (KivyMD 1.2.0)
+<LoginScreen>:
+    MDBoxLayout:
+        orientation: "vertical"
+        spacing: "20dp"
+        padding: "40dp"
+
+        # Header
+        MDCard:
+            orientation: "vertical"
+            padding: "20dp"
+            spacing: "10dp"
+            elevation: 3
+            radius: [15,]
+
+            MDLabel:
+                text: "🍔 SISTEMA POS"
+                font_style: "H4"
+                halign: "center"
+                theme_text_color: "Primary"
+
+            MDLabel:
+                text: "Control de Acceso"
+                font_style: "Subtitle1"
+                halign: "center" 
+                theme_text_color: "Secondary"
+
+        # Display PIN
+        MDCard:
+            orientation: "vertical"
+            padding: "20dp"
+            spacing: "10dp"
+            elevation: 3
+            radius: [15,]
+            size_hint_y: None
+            height: "120dp"
+
+            MDLabel:
+                id: pin_display
+                text: "••••••"
+                font_style: "H3"
+                halign: "center"
+                theme_text_color: "Primary"
+
+            MDLabel:
+                id: message_label
+                text: root.mensaje
+                font_style: "Body1"
+                halign: "center"
+                theme_text_color: "Secondary"
+
+        # Teclado numérico
+        MDCard:
+            padding: "20dp"
+            elevation: 3
+            radius: [15,]
+
+            MDGridLayout:
+                id: keyboard_grid
+                cols: 3
+                spacing: "10dp"
+                size_hint_y: None
+                height: self.minimum_height
+
+                # Botones 1-9
+                MDRaisedButton:
+                    text: "1"
+                    on_press: root.agregar_digito("1")
+                    
+                MDRaisedButton:
+                    text: "2" 
+                    on_press: root.agregar_digito("2")
+                    
+                MDRaisedButton:
+                    text: "3"
+                    on_press: root.agregar_digito("3")
+                    
+                MDRaisedButton:
+                    text: "4"
+                    on_press: root.agregar_digito("4")
+                    
+                MDRaisedButton:
+                    text: "5"
+                    on_press: root.agregar_digito("5")
+                    
+                MDRaisedButton:
+                    text: "6"
+                    on_press: root.agregar_digito("6")
+                    
+                MDRaisedButton:
+                    text: "7"
+                    on_press: root.agregar_digito("7")
+                    
+                MDRaisedButton:
+                    text: "8"
+                    on_press: root.agregar_digito("8")
+                    
+                MDRaisedButton:
+                    text: "9"
+                    on_press: root.agregar_digito("9")
+                
+                # Botones especiales
+                MDRaisedButton:
+                    text: "⌫"
+                    md_bg_color: 0.8, 0.3, 0.3, 1
+                    on_press: root.eliminar_digito()
+                    
+                MDRaisedButton:
+                    text: "0"
+                    on_press: root.agregar_digito("0")
+                    
+                MDRaisedButton:
+                    text: "ENTRAR"
+                    md_bg_color: app.theme_cls.primary_color
+                    on_press: root.realizar_login()

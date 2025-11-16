@@ -1,0 +1,103 @@
+# mis_widgets/responsive_components.kv
+<ResponsiveCard>:
+    # Estilos base se manejan en Python
+    canvas.before:
+        Color:
+            rgba: self.theme_cls.bg_dark if root.theme_cls.theme_style == "Dark" else [1, 1, 1, 1]
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: root.radius
+
+<ResponsiveButton>:
+    size_hint_y: None
+    height: root.responsive_height
+    
+    MDButtonText:
+        text: root.text
+        theme_text_color: "Custom" if root.button_style == "filled" else "Primary"
+        text_color: root.theme_cls.on_primary_color if root.button_style == "filled" else root.theme_cls.primary_color
+
+<ResponsiveLabel>:
+    adaptive_size: True
+    shorten: True
+
+<StatsCard>:
+    padding: "15dp"
+    spacing: "10dp"
+    elevation: 2
+
+<ProductCard>:
+    size_hint: None, None
+    size: "150dp", "180dp"
+    
+    FitImage:
+        size_hint_y: 0.5
+        source: root.product_image
+        radius: [dp(10), dp(10), 0, 0]
+    
+    MDBoxLayout:
+        orientation: "vertical"
+        spacing: "5dp"
+        padding: "5dp"
+        
+        ResponsiveLabel:
+            text: root.product_name
+            role: "body"
+            theme_text_color: "Primary"
+            adaptive_size: True
+            shorten: True
+            
+        ResponsiveLabel:
+            text: root.product_price
+            role: "title" 
+            theme_text_color: "Primary"
+            bold: True
+            
+        MDIconButton:
+            icon: "plus"
+            theme_icon_color: "Primary"
+            pos_hint: {"center_x": 0.5}
+
+<OrderItemCard>:
+    size_hint_y: None
+    height: "60dp"
+    
+    MDBoxLayout:
+        orientation: "horizontal"
+        spacing: "10dp"
+        
+        MDBoxLayout:
+            orientation: "vertical"
+            size_hint_x: 0.6
+            
+            ResponsiveLabel:
+                text: root.item_name
+                role: "body"
+                theme_text_color: "Primary"
+                
+            ResponsiveLabel:
+                text: root.item_price
+                role: "caption"
+                theme_text_color: "Secondary"
+        
+        MDBoxLayout:
+            orientation: "horizontal"
+            size_hint_x: 0.4
+            spacing: "5dp"
+            
+            MDIconButton:
+                icon: "minus"
+                size_hint: None, None
+                size: "30dp", "30dp"
+                
+            ResponsiveLabel:
+                text: str(root.item_quantity)
+                size_hint_x: 0.4
+                halign: "center"
+                role: "body"
+                
+            MDIconButton:
+                icon: "plus"
+                size_hint: None, None
+                size: "30dp", "30dp"

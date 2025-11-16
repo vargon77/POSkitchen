@@ -1,0 +1,27 @@
+========================================
+            RESTAURANTE POS             
+           Av. Principal #123           
+Tel:              (555) 123-4567             
+RFC:               POS010101ABC              
+========================================
+Ticket: #24
+Fecha: 28/10/2025 02:22
+Mesa: 1
+Mesero: Juan Pérez
+Pago: TARJETA
+Estado: ENTREGADO
+----------------------------------------
+CANT DESCRIPCION                    TOTAL
+----------------------------------------
+ 2 x Agua Mineral   $  30.00
+ 1 x Coca-Cola      $  25.00
+ 1 x Hamburguesa Clásic$ 120.00
+ 1 x Pizza Margarita$ 180.00
+----------------------------------------
+Subtotal:                      $ 355.00
+IVA (16%):                     $  56.80
+TOTAL:                         $ 411.80
+========================================
+      ¡Gracias por su preferencia!      
+      *** COMPROBANTE DE PAGO ***       
+========================================

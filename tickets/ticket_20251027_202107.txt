@@ -1,0 +1,25 @@
+========================================
+            RESTAURANTE POS             
+           Av. Principal #123           
+Tel:              (555) 123-4567             
+RFC:               POS010101ABC              
+========================================
+Ticket: #16
+Fecha: 27/10/2025 20:21
+Mesa: 1
+Mesero: Juan Pérez
+Pago: EFECTIVO
+Estado: LISTO
+----------------------------------------
+CANT DESCRIPCION                    TOTAL
+----------------------------------------
+ 1 x Agua Mineral   $  15.00
+ 1 x Hamburguesa Clásic$ 120.00
+----------------------------------------
+Subtotal:                      $ 135.00
+IVA (16%):                     $  21.60
+TOTAL:                         $ 156.60
+========================================
+      ¡Gracias por su preferencia!      
+      *** COMPROBANTE DE PAGO ***       
+========================================

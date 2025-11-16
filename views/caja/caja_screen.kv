@@ -1,0 +1,211 @@
+# views/caja/caja_screen.kv
+<CajaScreen>:
+    name: "caja"
+    
+    BoxLayout:
+        orientation: "vertical"
+        spacing: "10dp"
+        padding: "15dp"
+
+        # Header con botón de menú
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: "50dp"
+            spacing: "10dp"
+
+            Button:
+                text: "☰"
+                size_hint_x: None
+                width: "50dp"
+                background_color: (0.3, 0.5, 0.8, 1)
+                background_normal: ''
+                on_release: app.abrir_menu()
+                
+            Label:
+                text: "💰 MÓDULO DE CAJA"
+                font_size: '20sp'
+                bold: True
+                halign: "left"
+                color: (0.2, 0.2, 0.2, 1)
+                size_hint_x: 0.7
+
+            Button:
+                text: "🔄"
+                size_hint_x: None
+                width: "50dp"
+                background_color: (0.3, 0.5, 0.8, 1)
+                background_normal: ''
+                on_release: root.forzar_actualizacion()
+
+        # Tarjeta de Estado de Caja
+        BoxLayout:
+            orientation: "vertical"
+            padding: "20dp"
+            spacing: "10dp"
+            size_hint_y: None
+            height: "120dp"
+            canvas.before:
+                Color:
+                    rgba: (1, 1, 1, 1)
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [10]
+
+            Label:
+                text: "ESTADO ACTUAL DE CAJA"
+                font_size: '16sp'
+                color: (0.5, 0.5, 0.5, 1)
+                halign: "center"
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Label:
+                id: label_estado
+                text: root.estado_caja
+                font_size: '20sp'
+                halign: "center"
+                bold: True
+                color: (0.2, 0.2, 0.2, 1)
+                size_hint_y: None
+                height: self.texture_size[1]
+
+        # Tarjeta de Estadísticas
+        BoxLayout:
+            orientation: "vertical"
+            padding: "15dp"
+            size_hint_y: None
+            height: "80dp"
+            canvas.before:
+                Color:
+                    rgba: (1, 1, 1, 1)
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [10]
+
+            Label:
+                id: label_estadisticas
+                text: "Ventas Hoy: $0.00 | Efectivo: $0.00 | Tarjeta: $0.00 | Transferencia: $0.00"
+                font_size: '14sp'
+                color: (0.5, 0.5, 0.5, 1)
+                halign: "center"
+                text_size: self.width - 20, None
+                size_hint_y: None
+                height: self.texture_size[1]
+
+        # Controles de Caja
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: "60dp"
+            spacing: "10dp"
+            padding: "5dp"
+
+            Button:
+                id: btn_abrir
+                text: "ABRIR CAJA"
+                background_color: (0.2, 0.7, 0.2, 1)
+                background_normal: ''
+                on_release: root.abrir_caja()
+                disabled: root.caja_abierta
+
+            Button:
+                id: btn_cerrar
+                text: "CERRAR CAJA"
+                background_color: (0.8, 0.3, 0.3, 1)
+                background_normal: ''
+                on_release: root.cerrar_caja()
+                disabled: not root.caja_abierta
+        
+    
+        # Separador
+        BoxLayout:        
+            orientation: "horizontal"
+            size_hint_y: None
+            height: "50dp"
+            spacing: "10dp"
+            padding: "5dp"
+            
+            canvas:
+                Color:
+                    rgba: 0.7, 0.7, 0.7, 0.5
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+
+            Button:
+                text: "📅 VER HISTORIAL"
+                background_color: (0.5, 0.3, 0.8, 1)
+                background_normal: ''
+                on_release: root.ver_historial_cierres()
+
+            Button:
+                text: "🔄 ACTUALIZAR"
+                background_color: (0.3, 0.5, 0.8, 1)
+                background_normal: ''
+                on_release: root.forzar_actualizacion()
+
+            Button:
+                text: "💰 ARQUEO"
+                background_color: (0.8, 0.6, 0.2, 1)
+                background_normal: ''
+                on_release: root.realizar_arqueo()
+
+            Button:
+                text: "📊 HIST. ARQUEOS"
+                background_color: (0.5, 0.3, 0.8, 1)
+                background_normal: ''
+                on_release: root.ver_historial_arqueos()
+
+            Button:
+                text: "📅 HIST. CIERRES"
+                background_color: (0.3, 0.5, 0.8, 1)
+                background_normal: ''
+                on_release: root.ver_historial_cierres()
+
+            Button:
+                text: "🎫 TEST TICKET"
+                background_color: (0.1, 0.6, 0.3, 1)
+                background_normal: ''
+                on_release: root.test_ticket()
+
+            Button:
+                text: "👨‍🍳 TICKET COCINA"
+                background_color: (0.8, 0.4, 0.1, 1)
+                background_normal: ''
+                on_release: root.test_ticket_cocina()
+
+            Button:
+                text: "🐛 DEBUG"
+                background_color: (0.8, 0.2, 0.2, 1)
+                background_normal: ''
+                on_release: root.debug_pedidos()
+
+
+
+            
+        # Título de Pedidos Pendientes
+        Label:
+            text: "PEDIDOS PENDIENTES DE PAGO"
+            font_size: '18sp'
+            color: (0.5, 0.5, 0.5, 1)
+            size_hint_y: None
+            height: "30dp"
+            halign: "center"
+            bold: True
+
+        # Lista de Pedidos
+        ScrollView:
+            bar_width: "8dp"
+            bar_color: 0.3, 0.5, 0.8, 0.8
+
+            BoxLayout:
+                id: contenedor_pedidos
+                orientation: "vertical"
+                spacing: "10dp"
+                size_hint_y: None
+                height: self.minimum_height
+                padding: "5dp"

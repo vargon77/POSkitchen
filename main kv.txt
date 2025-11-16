@@ -1,0 +1,135 @@
+# main.kv (KivyMD 1.2.0)
+MDNavigationLayout:
+
+    ScreenManager:
+        id: screen_manager
+
+        LoginScreen:
+            name: "login"
+
+        MenuScreen:
+            name: "menu"
+
+        # Pantallas placeholder por ahora
+        MDScreen:
+            name: "pedidos"
+            MDLabel:
+                text: "Módulo Pedidos - En desarrollo"
+                halign: "center"
+                font_style: "H5"
+
+        MDScreen:
+            name: "cocina" 
+            MDLabel:
+                text: "Módulo Cocina - En desarrollo"
+                halign: "center"
+                font_style: "H5"
+
+        MDScreen:
+            name: "cierre_cuenta"
+            MDLabel:
+                text: "Cierre Cuenta - En desarrollo"
+                halign: "center"
+                font_style: "H5"
+
+        MDScreen:
+            name: "caja"
+            MDLabel:
+                text: "Módulo Caja - En desarrollo"
+                halign: "center"
+                font_style: "H5"
+
+        MDScreen:
+            name: "inventario"
+            MDLabel:
+                text: "Módulo Inventario - En desarrollo"
+                halign: "center"
+                font_style: "H5"
+
+        MDScreen:
+            name: "config"
+            MDLabel:
+                text: "Configuración - En desarrollo"
+                halign: "center"
+                font_style: "H5"
+
+    MDNavigationDrawer:
+        id: nav_drawer
+        radius: (0, 16, 16, 0)
+
+        MDBoxLayout:
+            orientation: "vertical"
+            spacing: "10dp"
+            padding: "10dp"
+
+            MDLabel:
+                text: "Menú Principal"
+                font_style: "H5"
+                size_hint_y: None
+                height: self.texture_size[1] + dp(20)
+                padding: ["10dp", "10dp"]
+
+            MDSeparator:
+
+            ScrollView:
+                MDList:
+                    OneLineIconListItem:
+                        text: "📋 Menú Principal"
+                        on_press: app.cambiar_pantalla("menu")
+                        
+                        IconLeftWidget:
+                            icon: "home"
+
+                    OneLineIconListItem:
+                        text: "🛒 Tomar Pedido"
+                        on_press: app.cambiar_pantalla("pedidos")
+                        
+                        IconLeftWidget:
+                            icon: "cart"
+
+                    OneLineIconListItem:
+                        text: "👨‍🍳 Vista Cocina"
+                        on_press: app.cambiar_pantalla("cocina")
+                        
+                        IconLeftWidget:
+                            icon: "chef-hat"
+
+                    OneLineIconListItem:
+                        text: "💰 Módulo Caja"
+                        on_press: app.cambiar_pantalla("caja")
+                        
+                        IconLeftWidget:
+                            icon: "cash-register"
+
+                    OneLineIconListItem:
+                        text: "📦 Inventario"
+                        on_press: app.cambiar_pantalla("inventario")
+                        
+                        IconLeftWidget:
+                            icon: "package-variant"
+
+                    OneLineIconListItem:
+                        text: "⚙️ Configuración"
+                        on_press: app.cambiar_pantalla("config")
+                        
+                        IconLeftWidget:
+                            icon: "cog"
+
+            MDSeparator:
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: "120dp"
+                spacing: "10dp"
+                padding: "10dp"
+
+                MDRaisedButton:
+                    text: "🌙 Cambiar Tema"
+                    on_press: app.toggle_theme()
+
+                MDFlatButton:
+                    text: "🚪 Cerrar Sesión"
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.error_color
+                    on_press: app.logout_user()

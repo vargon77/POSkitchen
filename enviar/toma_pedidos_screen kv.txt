@@ -1,0 +1,203 @@
+# views/pedidos/toma_pedidos_screen.kv
+<TomaPedidoScreen>:
+    BoxLayout:
+        orientation: "vertical"
+
+        # BARRA SUPERIOR (sin cambios)
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: 0.1
+            padding: 10
+
+            Button:
+                text: "← Volver"
+                size_hint_x: 0.2
+                on_press: app.cambiar_pantalla("menu")
+            
+            Label:
+                text: f"Pedido - Mesa {root.mesa_actual}"
+                font_size: '20sp'
+                bold: True
+                size_hint_x: 0.6
+                halign: 'center'
+            
+            Button:
+                text: "💳 CERRAR"
+                size_hint_x: 0.2
+                background_color: (0.8, 0.6, 0.2, 1)
+                on_press: root.solicitar_cierre_cuenta()
+
+        BoxLayout:
+            orientation: "horizontal"
+            padding: 10
+            spacing: 10
+
+            # COLUMNA IZQUIERDA - PRODUCTOS (sin cambios)
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_x: 0.7
+
+                # Selector de Mesa (sin cambios)
+                BoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: 0.08
+                    spacing: 10
+
+                    Label:
+                        text: "Mesa:"
+                        size_hint_x: 0.2
+                        bold: True
+
+                    TextInput:
+                        id: campo_mesa
+                        text: root.mesa_actual
+                        size_hint_x: 0.5
+                        multiline: False
+                        on_text: root.mesa_actual = self.text
+
+                    Button:
+                        text: "Cambiar"
+                        size_hint_x: 0.3
+                        background_color: (0.3, 0.5, 0.8, 1)
+                        on_press: root.mesa_actual = campo_mesa.text
+
+                Label:
+                    text: "Categorías:"
+                    size_hint_y: 0.05
+                    bold: True
+
+                ScrollView:
+                    BoxLayout:
+                        id: contenedor_categorias
+                        orientation: "horizontal"
+                        size_hint_y: None
+                        height: "50dp"
+                        spacing: 5
+
+                Label:
+                    text: "Productos:"
+                    size_hint_y: 0.05
+                    bold: True
+
+                ScrollView:
+                    GridLayout:
+                        id: grid_productos
+                        cols: 2
+                        size_hint_y: None
+                        height: self.minimum_height
+                        spacing: 10
+                        padding: 10
+
+            # COLUMNA DERECHA - RESUMEN MEJORADO
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_x: 0.3
+                spacing: 5
+
+                # Título del resumen
+                BoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: 0.08
+                    padding: 5
+                    canvas.before:
+                        Color:
+                            rgba: 0.9, 0.9, 0.9, 1
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [5]
+
+                    Label:
+                        text: "RESUMEN DEL PEDIDO"
+                        bold: True
+                        font_size: '14sp'
+                        halign: 'center'
+
+                # Contenedor de items con borde y scroll
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: 0.7
+                    padding: 5
+                    canvas.before:
+                        Color:
+                            rgba: 0.95, 0.95, 0.95, 1
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [5]
+                        Color:
+                            rgba: 0.7, 0.7, 0.7, 1
+                        Line:
+                            rounded_rectangle: [self.x, self.y, self.width, self.height, 5]
+
+                    ScrollView:
+                        always_overscroll: False
+                        bar_width: 8
+                        bar_color: 0.3, 0.5, 0.8, 0.8
+                        
+                        BoxLayout:
+                            id: lista_items
+                            orientation: "vertical"
+                            size_hint_y: None
+                            height: self.minimum_height
+                            spacing: 2
+                            padding: 5
+
+                # BOTONES DE ACCIÓN
+                BoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: 0.12
+                    spacing: 5
+                    padding: 5
+
+                    Button:
+                        text: "LIMPIAR"
+                        background_color: (0.8, 0.3, 0.3, 1)
+                        background_normal: ''
+                        font_size: '12sp'
+                        on_press: root.limpiar_pedido()
+
+                    Button:
+                        text: "CONFIRMAR"
+                        background_color: (0.2, 0.7, 0.2, 1)
+                        background_normal: ''
+                        font_size: '12sp'
+                        on_press: root.confirmar_pedido()
+
+                # TOTAL
+                BoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: 0.08
+                    padding: 5
+                    canvas.before:
+                        Color:
+                            rgba: 0.8, 0.9, 0.8, 1
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [5]
+
+                    Label:
+                        text: "TOTAL:"
+                        bold: True
+                        font_size: '16sp'
+                        size_hint_x: 0.6
+
+                    Label:
+                        id: label_total
+                        text: f"${root.total_pedido:.2f}"
+                        bold: True
+                        font_size: '16sp'
+                        size_hint_x: 0.4
+                        halign: 'right'
+                        color: (0, 0.5, 0, 1)
+
+                # BOTÓN CERRAR CUENTA
+                Button:
+                    text: "💳 CERRAR CUENTA"
+                    size_hint_y: 0.08
+                    background_color: (0.8, 0.6, 0.2, 1)
+                    background_normal: ''
+                    font_size: '14sp'
+                    bold: True
+                    on_press: root.solicitar_cierre_cuenta()

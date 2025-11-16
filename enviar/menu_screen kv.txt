@@ -1,0 +1,362 @@
+# views/menu/menu_screen.kv -
+
+<MenuScreen>:
+    name: "menu"
+    md_bg_color: app.theme_cls.bg_dark if app.theme_cls.theme_style == "Dark" else ds_color('light')
+    
+    MDBoxLayout:
+        orientation: "vertical"
+        spacing: "0dp"
+        padding: "0dp"
+        
+        # === APP BAR MODERNA ===
+        MDBoxLayout:
+            id: app_bar
+            orientation: "horizontal"
+            size_hint_y: None
+            height: dp(56)  # Usar dp directamente
+            padding: [dp(16), dp(12)]
+            spacing: dp(12)
+            md_bg_color: ds_color('primary')
+            
+            MDIconButton:
+                icon: "menu"
+                theme_icon_color: "Custom"
+                icon_color: ds_color('white')
+                on_release: app.abrir_menu() if hasattr(app, 'abrir_menu') else print("Menú no configurado")
+            
+            MDLabel:
+                text: "Panel Principal - {}".format(root.usuario_nombre)
+                font_style: "H6"
+                theme_text_color: "Custom"
+                text_color: ds_color('white')
+                bold: True
+                size_hint_x: 1
+                halign: "left"
+            
+            MDIconButton:
+                icon: "bell-outline"
+                theme_icon_color: "Custom"
+                icon_color: ds_color('white')
+            
+            MDIconButton:
+                icon: "account-circle"
+                theme_icon_color: "Custom"
+                icon_color: ds_color('white')
+        
+        ScrollView:
+            bar_width: dp(6)
+            bar_color: ds_color('primary', 0.6)
+            effect_cls: "ScrollEffect"
+            
+            MDBoxLayout:
+                orientation: "vertical"
+                adaptive_height: True
+                padding: dp(24)
+                spacing: dp(24)
+                
+                # === TARJETAS DE ESTADÍSTICAS ===
+                MDLabel:
+                    text: "📊 ESTADÍSTICAS DEL DÍA"
+                    font_style: "H6"
+                    theme_text_color: "Primary"
+                    size_hint_y: None
+                    height: dp(48)
+                    halign: "center"
+                
+                MDBoxLayout:
+                    orientation: "horizontal"
+                    adaptive_height: True
+                    spacing: dp(12)
+                    
+                    # Tarjeta Ventas
+                    MDCard:
+                        orientation: "vertical"
+                        elevation: 2
+                        padding: dp(16)
+                        spacing: dp(8)
+                        size_hint_x: 1
+                        size_hint_y: None
+                        height: dp(120)
+                        radius: [dp(12)]
+                        
+                        MDBoxLayout:
+                            orientation: "horizontal"
+                            adaptive_height: True
+                            
+                            MDLabel:
+                                text: "💰"
+                                font_size: sp(24)
+                                size_hint_x: None
+                                width: dp(40)
+                                halign: "center"
+                            
+                            MDLabel:
+                                text: "Ventas Hoy"
+                                font_style: "Body2"
+                                theme_text_color: "Secondary"
+                                size_hint_x: 1
+                        
+                        MDLabel:
+                            text: "${}".format(root.ventas_hoy)
+                            font_style: "H5"
+                            theme_text_color: "Primary"
+                            bold: True
+                            halign: "center"
+                    
+                    # Tarjeta Pedidos
+                    MDCard:
+                        orientation: "vertical"
+                        elevation: 2
+                        padding: dp(16)
+                        spacing: dp(8)
+                        size_hint_x: 1
+                        size_hint_y: None
+                        height: dp(120)
+                        radius: [dp(12)]
+                        
+                        MDBoxLayout:
+                            orientation: "horizontal"
+                            adaptive_height: True
+                            
+                            MDLabel:
+                                text: "📦"
+                                font_size: sp(24)
+                                size_hint_x: None
+                                width: dp(40)
+                                halign: "center"
+                            
+                            MDLabel:
+                                text: "Pedidos Activos"
+                                font_style: "Body2"
+                                theme_text_color: "Secondary"
+                                size_hint_x: 1
+                        
+                        MDLabel:
+                            text: str(root.pedidos_activos)
+                            font_style: "H5"
+                            theme_text_color: "Primary"
+                            bold: True
+                            halign: "center"
+                    
+                    # Tarjeta Mesas
+                    MDCard:
+                        orientation: "vertical"
+                        elevation: 2
+                        padding: dp(16)
+                        spacing: dp(8)
+                        size_hint_x: 1
+                        size_hint_y: None
+                        height: dp(120)
+                        radius: [dp(12)]
+                        
+                        MDBoxLayout:
+                            orientation: "horizontal"
+                            adaptive_height: True
+                            
+                            MDLabel:
+                                text: "🍽️"
+                                font_size: sp(24)
+                                size_hint_x: None
+                                width: dp(40)
+                                halign: "center"
+                            
+                            MDLabel:
+                                text: "Mesas Ocupadas"
+                                font_style: "Body2"
+                                theme_text_color: "Secondary"
+                                size_hint_x: 1
+                        
+                        MDLabel:
+                            text: "{}/{}".format(root.mesas_ocupadas, root.mesas_totales)
+                            font_style: "H5"
+                            theme_text_color: "Primary"
+                            bold: True
+                            halign: "center"        
+                
+                # === MÓDULOS DEL SISTEMA ===
+                MDLabel:
+                    text: "🚀 MÓDULOS DEL SISTEMA"
+                    font_style: "H6"
+                    theme_text_color: "Primary"
+                    size_hint_y: None
+                    height: dp(48)
+                    halign: "center"
+                
+                # Grid responsivo de módulos - VERSIÓN SIMPLIFICADA
+                MDGridLayout:
+                    id: grid_modulos
+                    cols: 2  # Valor fijo por ahora
+                    spacing: dp(16)
+                    padding: dp(16)
+                    size_hint_y: None
+                    height: self.minimum_height
+                    
+                    # Módulo Pedidos
+                    MDCard:
+                        orientation: "vertical"
+                        elevation: 4
+                        padding: dp(20)
+                        spacing: dp(12)
+                        size_hint: (None, None)
+                        size: (dp(160), dp(140))
+                        md_bg_color: ds_color('primary')
+                        radius: [dp(16)]
+                        on_release: root.ir_a_modulo("pedidos")
+                        
+                        MDLabel:
+                            text: "🛒"
+                            font_size: sp(30)
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: ds_color('white')
+                            size_hint_y: 0.4
+                        
+                        MDLabel:
+                            text: "Tomar Pedido"
+                            font_style: "H6"
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: ds_color('white')
+                            bold: True
+                            size_hint_y: 0.3
+                        
+                        MDLabel:
+                            text: "Nuevos pedidos"
+                            font_style: "Body2"
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: ds_color('white')
+                            size_hint_y: 0.3
+                    
+                    # Módulo Cocina
+                    MDCard:
+                        orientation: "vertical"
+                        elevation: 4
+                        padding: dp(20)
+                        spacing: dp(12)
+                        size_hint: (None, None)
+                        size: (dp(160), dp(140))
+                        md_bg_color: ds_color('secondary')
+                        radius: [dp(16)]
+                        on_release: root.ir_a_modulo("cocina")
+                        
+                        MDLabel:
+                            text: "👨‍🍳"
+                            font_size: sp(30)
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: ds_color('white')
+                            size_hint_y: 0.4
+                        
+                        MDLabel:
+                            text: "Vista Cocina"
+                            font_style: "H6"
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: ds_color('white')
+                            bold: True
+                            size_hint_y: 0.3
+                        
+                        MDLabel:
+                            text: "Control cocina"
+                            font_style: "Body2"
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: ds_color('white')
+                            size_hint_y: 0.3
+                    
+                    # Módulo Caja
+                    MDCard:
+                        orientation: "vertical"
+                        elevation: 4
+                        padding: dp(20)
+                        spacing: dp(12)
+                        size_hint: (None, None)
+                        size: (dp(160), dp(140))
+                        md_bg_color: ds_color('accent')
+                        radius: [dp(16)]
+                        on_release: root.ir_a_modulo("caja")
+                        
+                        MDLabel:
+                            text: "💰"
+                            font_size: sp(30)
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: ds_color('white')
+                            size_hint_y: 0.4
+                        
+                        MDLabel:
+                            text: "Módulo Caja"
+                            font_style: "H6"
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: ds_color('white')
+                            bold: True
+                            size_hint_y: 0.3
+                        
+                        MDLabel:
+                            text: "Gestión pagos"
+                            font_style: "Body2"
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: ds_color('white')
+                            size_hint_y: 0.3
+                    
+                    # Módulo Inventario
+                    MDCard:
+                        orientation: "vertical"
+                        elevation: 4
+                        padding: dp(20)
+                        spacing: dp(12)
+                        size_hint: (None, None)
+                        size: (dp(160), dp(140))
+                        md_bg_color: ds_color('success')
+                        radius: [dp(16)]
+                        on_release: root.ir_a_modulo("inventario")
+                        
+                        MDLabel:
+                            text: "📦"
+                            font_size: sp(30)
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: ds_color('white')
+                            size_hint_y: 0.4
+                        
+                        MDLabel:
+                            text: "Inventario"
+                            font_style: "H6"
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: ds_color('white')
+                            bold: True
+                            size_hint_y: 0.3
+                        
+                        MDLabel:
+                            text: "Control stock"
+                            font_style: "Body2"
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: ds_color('white')
+                            size_hint_y: 0.3
+                
+                # === FOOTER INFORMATIVO ===
+                MDBoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: None
+                    height: dp(40)
+                    spacing: dp(12)
+                    
+                    MDLabel:
+                        text: "Rol: {}".format(root.usuario_rol)
+                        font_style: "Caption"
+                        theme_text_color: "Secondary"
+                        size_hint_x: 0.5
+                    
+                    MDLabel:
+                        text: "Sistema POS v1.0"
+                        font_style: "Caption"
+                        theme_text_color: "Secondary"
+                        size_hint_x: 0.5
+                        halign: "right"
+

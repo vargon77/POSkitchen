@@ -1,0 +1,90 @@
+# widgets/order_item.py (VERSIÓN CORREGIDA)
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.button import Button
+from kivy.properties import NumericProperty, StringProperty
+
+class OrderItem(BoxLayout):
+    def __init__(self, item_data, pedido_screen, **kwargs):
+        super().__init__(**kwargs)
+        
+        self.item_data = item_data  # Referencia al item real en el pedido
+        self.pedido_screen = pedido_screen  # Referencia a la pantalla principal
+        self.orientation = 'horizontal'
+        self.size_hint_y = None
+        self.height = 50
+        self.spacing = 10
+        self.padding = [5, 5, 5, 5]
+        
+        # Crear la UI manualmente
+        self.label_nombre = Label(
+            text=item_data['nombre'],
+            size_hint_x=0.4,
+            text_size=(150, None),  # Ancho fijo para texto
+            halign='left',
+            valign='middle'
+        )
+        
+        self.btn_menos = Button(
+            text='-',
+            size_hint_x=0.1,
+            background_color=(1, 0.3, 0.3, 1),  # Rojo
+            background_normal='',
+            color=(1, 1, 1, 1)
+        )
+        
+        self.label_cantidad = Label(
+            text=str(item_data['cantidad']),
+            size_hint_x=0.1,
+            halign='center',
+            bold=True
+        )
+        
+        self.btn_mas = Button(
+            text='+', 
+            size_hint_x=0.1,
+            background_color=(0.3, 0.7, 0.3, 1),  # Verde
+            background_normal='',
+            color=(1, 1, 1, 1)
+        )
+        
+        self.label_subtotal = Label(
+            text=f"${item_data['subtotal']:.2f}",
+            size_hint_x=0.3,
+            halign='right',
+            bold=True
+        )
+        
+        # Agregar widgets
+        self.add_widget(self.label_nombre)
+        self.add_widget(self.btn_menos)
+        self.add_widget(self.label_cantidad)
+        self.add_widget(self.btn_mas)
+        self.add_widget(self.label_subtotal)
+        
+        # Conectar eventos DIRECTAMENTE a los métodos de la pantalla
+        self.btn_mas.bind(on_press=self.aumentar_cantidad)
+        self.btn_menos.bind(on_press=self.disminuir_cantidad)
+    
+    def aumentar_cantidad(self, instance):
+        """Aumentar cantidad y actualizar pedido real"""
+        self.item_data['cantidad'] += 1
+        self.item_data['subtotal'] = self.item_data['cantidad'] * self.item_data['precio']
+        self.actualizar_ui()
+        self.pedido_screen.actualizar_pedido_completo()
+    
+    def disminuir_cantidad(self, instance):
+        """Disminuir cantidad y actualizar pedido real"""
+        if self.item_data['cantidad'] > 1:
+            self.item_data['cantidad'] -= 1
+            self.item_data['subtotal'] = self.item_data['cantidad'] * self.item_data['precio']
+            self.actualizar_ui()
+            self.pedido_screen.actualizar_pedido_completo()
+        else:
+            # Eliminar item si llega a 0
+            self.pedido_screen.eliminar_item_pedido(self.item_data)
+    
+    def actualizar_ui(self):
+        """Actualizar solo este widget"""
+        self.label_cantidad.text = str(self.item_data['cantidad'])
+        self.label_subtotal.text = f"${self.item_data['subtotal']:.2f}"

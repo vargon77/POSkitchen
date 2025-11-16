@@ -1,0 +1,25 @@
+========================================
+            RESTAURANTE POS             
+           Av. Principal #123           
+Tel:              (555) 123-4567             
+RFC:               POS010101ABC              
+========================================
+Ticket: #20
+Fecha: 28/10/2025 18:34
+Mesa: 1
+Mesero: Juan Pérez
+Pago: TARJETA
+Estado: ENTREGADO
+----------------------------------------
+CANT DESCRIPCION                    TOTAL
+----------------------------------------
+ 3 x Agua Mineral   $  45.00
+ 3 x Coca-Cola      $  75.00
+----------------------------------------
+Subtotal:                      $ 120.00
+IVA (16%):                     $  19.20
+TOTAL:                         $ 139.20
+========================================
+      ¡Gracias por su preferencia!      
+      *** COMPROBANTE DE PAGO ***       
+========================================

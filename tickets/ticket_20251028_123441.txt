@@ -1,0 +1,24 @@
+========================================
+            RESTAURANTE POS             
+           Av. Principal #123           
+Tel:              (555) 123-4567             
+RFC:               POS010101ABC              
+========================================
+Ticket: #19
+Fecha: 28/10/2025 18:34
+Mesa: 1
+Mesero: Juan Pérez
+Pago: TRANSFERENCIA
+Estado: ENTREGADO
+----------------------------------------
+CANT DESCRIPCION                    TOTAL
+----------------------------------------
+ 6 x Hamburguesa Clásic$ 720.00
+----------------------------------------
+Subtotal:                      $ 720.00
+IVA (16%):                     $ 115.20
+TOTAL:                         $ 835.20
+========================================
+      ¡Gracias por su preferencia!      
+      *** COMPROBANTE DE PAGO ***       
+========================================

@@ -1,0 +1,66 @@
+# themes/responsive_design.py
+from kivy.metrics import dp, sp
+from kivy.properties import NumericProperty, StringProperty
+from kivy.core.window import Window
+
+class ResponsiveDesign:
+    """Sistema de diseño responsivo para KivyMD"""
+    
+    # Breakpoints para diferentes tamaños de pantalla
+    BREAKPOINTS = {
+        'xs': dp(360),   # Móviles pequeños
+        'sm': dp(600),   # Móviles grandes/Tablets pequeñas
+        'md': dp(960),   # Tablets
+        'lg': dp(1280),  # Desktop pequeños
+        'xl': dp(1920)   # Desktop grandes
+    }
+    
+    # Espaciado responsivo
+    @classmethod
+    def spacing(cls, multiplier=1):
+        base = dp(8)  # 8dp base
+        if Window.width <= cls.BREAKPOINTS['xs']:
+            return base * multiplier * 0.75
+        elif Window.width <= cls.BREAKPOINTS['sm']:
+            return base * multiplier * 0.9
+        else:
+            return base * multiplier
+    
+    # Tamaños de fuente responsivos
+    @classmethod
+    def font_size(cls, size_type='body'):
+        sizes = {
+            'h1': sp(24), 'h2': sp(20), 'h3': sp(18),
+            'body': sp(16), 'caption': sp(14), 'small': sp(12)
+        }
+        
+        base_size = sizes.get(size_type, sp(16))
+        
+        if Window.width <= cls.BREAKPOINTS['xs']:
+            return base_size * 0.9
+        elif Window.width <= cls.BREAKPOINTS['sm']:
+            return base_size * 0.95
+        else:
+            return base_size
+    
+    # Alturas de componentes
+    @classmethod
+    def button_height(cls):
+        if Window.width <= cls.BREAKPOINTS['xs']:
+            return dp(40)
+        elif Window.width <= cls.BREAKPOINTS['sm']:
+            return dp(44)
+        else:
+            return dp(48)
+    
+    # Layout columns responsivo
+    @classmethod
+    def grid_columns(cls, default_cols=2):
+        if Window.width <= cls.BREAKPOINTS['xs']:
+            return 1
+        elif Window.width <= cls.BREAKPOINTS['sm']:
+            return min(2, default_cols)
+        elif Window.width <= cls.BREAKPOINTS['md']:
+            return min(3, default_cols)
+        else:
+            return default_cols

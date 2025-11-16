@@ -1,0 +1,24 @@
+========================================
+            RESTAURANTE POS             
+           Av. Principal #123           
+Tel:              (555) 123-4567             
+RFC:               POS010101ABC              
+========================================
+Ticket: #22
+Fecha: 28/10/2025 18:48
+Mesa: 1
+Mesero: Juan Pérez
+Pago: TARJETA
+Estado: ENTREGADO
+----------------------------------------
+CANT DESCRIPCION                    TOTAL
+----------------------------------------
+ 5 x Ensalada César $ 475.00
+----------------------------------------
+Subtotal:                      $ 475.00
+IVA (16%):                     $  76.00
+TOTAL:                         $ 551.00
+========================================
+      ¡Gracias por su preferencia!      
+      *** COMPROBANTE DE PAGO ***       
+========================================
