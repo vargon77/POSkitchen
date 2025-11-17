@@ -1,51 +1,329 @@
-# views/cocina/cocina_screen.kv
+# views/cocina/cocina_screen.kv - DISEÑO PROFESIONAL
 <CocinaScreen>:
-    BoxLayout:
+    MDBoxLayout:
         orientation: "vertical"
+        spacing: 0
+        padding: 0
 
-        # BARRA SUPERIOR
-        BoxLayout:
+        # ========== TOP BAR CON ESTADÍSTICAS ==========
+        MDTopAppBar:
+            title: "👨‍🍳 Vista Cocina"
+            md_bg_color: ds_color('primary')
+            elevation: 2
+            left_action_items: [["arrow-left", lambda x: app.cambiar_pantalla("menu")]]
+            right_action_items: 
+                [
+                    ["bell-ring", lambda x: root.ver_alertas()],
+                    ["refresh", lambda x: root.cargar_pedidos()]
+                ]
+
+        # ========== PANEL ESTADÍSTICAS RÁPIDAS ==========
+        MDCard:
             orientation: "horizontal"
-            size_hint_y: 0.1
-            padding: 10
+            size_hint_y: None
+            height: dp(70)
+            padding: ds_spacing('sm')
+            spacing: ds_spacing('xs')
+            elevation: 1
+            md_bg_color: ds_color('light')
 
-            Button:
-                text: "← Volver"
-                size_hint_x: 0.15
-                on_press: app.cambiar_pantalla("menu")
-            
-            Label:
-                text: "👨‍🍳 VISTA COCINA"
-                font_size: '20sp'
-                bold: True
-                size_hint_x: 0.7
-                halign: 'center'
-            
-            Button:
-                text: "🔄 Actualizar"
-                size_hint_x: 0.15
-                background_color: (0.3, 0.5, 0.8, 1)
-                on_press: root.forzar_actualizacion()
-
-        # ESTADÍSTICAS
-        BoxLayout:
-            orientation: "horizontal"
-            size_hint_y: 0.08
-            padding: 10
-
-            Label:
-                text: root.estadisticas
-                font_size: '14sp'
-                bold: True
-                halign: 'center'
-                text_size: self.width, None
-
-        # PEDIDOS ACTIVOS
-        ScrollView:
-            BoxLayout:
-                id: contenedor_pedidos
+            # Pendientes
+            MDBoxLayout:
                 orientation: "vertical"
+                size_hint_x: 0.25
+                
+                MDLabel:
+                    text: "PENDIENTES"
+                    font_style: "Caption"
+                    halign: "center"
+                    size_hint_y: 0.4
+                    theme_text_color: "Secondary"
+                
+                MDLabel:
+                    id: label_pendientes
+                    text: "0"
+                    font_style: "H5"
+                    bold: True
+                    halign: "center"
+                    size_hint_y: 0.6
+                    theme_text_color: "Custom"
+                    text_color: ds_color('warning')
+
+            # En preparación
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 0.25
+                
+                MDLabel:
+                    text: "PREPARANDO"
+                    font_style: "Caption"
+                    halign: "center"
+                    size_hint_y: 0.4
+                    theme_text_color: "Secondary"
+                
+                MDLabel:
+                    id: label_preparando
+                    text: "0"
+                    font_style: "H5"
+                    bold: True
+                    halign: "center"
+                    size_hint_y: 0.6
+                    theme_text_color: "Custom"
+                    text_color: ds_color('info')
+
+            # Listos
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 0.25
+                
+                MDLabel:
+                    text: "LISTOS"
+                    font_style: "Caption"
+                    halign: "center"
+                    size_hint_y: 0.4
+                    theme_text_color: "Secondary"
+                
+                MDLabel:
+                    id: label_listos
+                    text: "0"
+                    font_style: "H5"
+                    bold: True
+                    halign: "center"
+                    size_hint_y: 0.6
+                    theme_text_color: "Custom"
+                    text_color: ds_color('success')
+
+            # Tiempo promedio
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 0.25
+                
+                MDLabel:
+                    text: "TIEMPO PROM."
+                    font_style: "Caption"
+                    halign: "center"
+                    size_hint_y: 0.4
+                    theme_text_color: "Secondary"
+                
+                MDLabel:
+                    id: label_tiempo_prom
+                    text: "0 min"
+                    font_style: "Subtitle1"
+                    bold: True
+                    halign: "center"
+                    size_hint_y: 0.6
+                    theme_text_color: "Primary"
+
+        # ========== FILTROS RÁPIDOS ==========
+        MDCard:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: dp(50)
+            padding: [ds_spacing('md'), ds_spacing('xs')]
+            spacing: ds_spacing('xs')
+            elevation: 0
+            md_bg_color: ds_color('white')
+
+            MDLabel:
+                text: "Filtrar:"
+                font_style: "Subtitle2"
+                bold: True
+                size_hint_x: None
+                width: dp(60)
+
+            MDChip:
+                id: chip_todos
+                text: "TODOS"
+                selected: True
+                on_press: root.filtrar_pedidos('todos')
+
+            MDChip:
+                id: chip_pendientes
+                text: "PENDIENTES"
+                on_press: root.filtrar_pedidos('pendiente')
+
+            MDChip:
+                id: chip_preparacion
+                text: "EN PREP."
+                on_press: root.filtrar_pedidos('preparacion')
+
+            MDChip:
+                id: chip_listos_filtro
+                text: "LISTOS"
+                on_press: root.filtrar_pedidos('listo')
+
+        # ========== GRID DE PEDIDOS ==========
+        ScrollView:
+            do_scroll_x: False
+            bar_width: dp(4)
+            bar_color: ds_color('primary', 0.3)
+
+            MDGridLayout:
+                id: grid_pedidos
+                cols: 3 if not ds_is_mobile() else 1
+                spacing: ds_spacing('md')
+                padding: ds_spacing('md')
                 size_hint_y: None
                 height: self.minimum_height
-                spacing: 15
-                padding: 10
+                adaptive_size: True
+
+
+# ========== WIDGET: CARD DE PEDIDO COCINA ==========
+<PedidoCocinaCard@MDCard>:
+    orientation: "vertical"
+    size_hint_y: None
+    height: dp(280) if not ds_is_mobile() else dp(260)
+    padding: 0
+    spacing: 0
+    elevation: 3
+    radius: dp(12)
+    
+    pedido_id: 0
+    mesa: ""
+    estado: "pendiente"
+    tiempo_espera: ""
+    items_text: ""
+    mesero: ""
+    
+    # Color del borde según estado
+    md_bg_color: ds_color('white')
+    
+    canvas.before:
+        Color:
+            rgba: root.color_estado
+        RoundedRectangle:
+            pos: [self.x, self.y + self.height - dp(6), self.width, dp(6)]
+            size: [self.width, dp(6)]
+            radius: [dp(12), dp(12), 0, 0]
+    
+    # Header del pedido
+    MDBoxLayout:
+        orientation: "horizontal"
+        size_hint_y: None
+        height: dp(60)
+        padding: ds_spacing('sm')
+        spacing: ds_spacing('sm')
+        md_bg_color: root.color_estado_light
+        
+        MDBoxLayout:
+            orientation: "vertical"
+            size_hint_x: 0.5
+            
+            MDLabel:
+                text: f"PEDIDO #{root.pedido_id}"
+                font_style: "H6"
+                bold: True
+                theme_text_color: "Primary"
+                size_hint_y: 0.6
+            
+            MDLabel:
+                text: f"Mesa {root.mesa}"
+                font_style: "Caption"
+                theme_text_color: "Secondary"
+                size_hint_y: 0.4
+        
+        MDBoxLayout:
+            orientation: "vertical"
+            size_hint_x: 0.5
+            
+            MDLabel:
+                text: root.tiempo_espera
+                font_style: "Subtitle1"
+                bold: True
+                halign: "right"
+                theme_text_color: "Custom"
+                text_color: root.color_tiempo
+                size_hint_y: 0.6
+            
+            MDLabel:
+                text: root.estado.upper()
+                font_style: "Caption"
+                halign: "right"
+                theme_text_color: "Secondary"
+                size_hint_y: 0.4
+    
+    # Separador
+    MDSeparator:
+        height: dp(1)
+    
+    # Items del pedido
+    ScrollView:
+        size_hint_y: None
+        height: dp(120)
+        do_scroll_x: False
+        bar_width: 0
+        
+        MDLabel:
+            text: root.items_text
+            font_style: "Body2"
+            size_hint_y: None
+            height: self.texture_size[1]
+            padding: [ds_spacing('sm'), ds_spacing('xs')]
+            text_size: self.width - dp(16), None
+            theme_text_color: "Primary"
+    
+    # Separador
+    MDSeparator:
+        height: dp(1)
+    
+    # Info mesero
+    MDBoxLayout:
+        orientation: "horizontal"
+        size_hint_y: None
+        height: dp(30)
+        padding: [ds_spacing('sm'), dp(4)]
+        md_bg_color: ds_color('light')
+        
+        MDLabel:
+            text: f"Mesero: {root.mesero}"
+            font_style: "Caption"
+            theme_text_color: "Secondary"
+    
+    # Botones de acción
+    MDBoxLayout:
+        orientation: "horizontal"
+        size_hint_y: None
+        height: dp(50)
+        spacing: dp(4)
+        padding: [ds_spacing('xs'), ds_spacing('xs')]
+        
+        MDRaisedButton:
+            id: btn_accion_principal
+            text: root.texto_boton_principal
+            icon: root.icono_boton_principal
+            md_bg_color: root.color_boton_principal
+            on_release: root.accion_principal()
+        
+        MDIconButton:
+            icon: "information-outline"
+            theme_icon_color: "Custom"
+            icon_color: ds_color('info')
+            on_release: root.ver_detalle()
+
+
+# ========== ESTADO VACÍO ==========
+<CocinaEmptyState@MDBoxLayout>:
+    orientation: "vertical"
+    padding: dp(40)
+    spacing: dp(20)
+    
+    MDLabel:
+        text: "👨‍🍳"
+        font_size: sp(64)
+        halign: "center"
+        size_hint_y: None
+        height: dp(80)
+    
+    MDLabel:
+        text: "Sin pedidos activos"
+        font_style: "H5"
+        halign: "center"
+        theme_text_color: "Secondary"
+        size_hint_y: None
+        height: dp(40)
+    
+    MDLabel:
+        text: "Los nuevos pedidos aparecerán aquí"
+        font_style: "Body2"
+        halign: "center"
+        theme_text_color: "Hint"

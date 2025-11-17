@@ -1,327 +1,391 @@
-# views/pedidos/cierre_cuenta_screen.kv 
+# views/pedidos/cierre_cuenta_screen.kv - DISEÑO PROFESIONAL
 <CierreCuentaScreen>:
     name: "cierre_cuenta"
     
-    BoxLayout:
+    MDBoxLayout:
         orientation: "vertical"
-        spacing: "5dp"
-        padding: "10dp"
+        spacing: 0
+        padding: 0
 
-        # ============ ENCABEZADO ============
-        BoxLayout:
+        # ========== TOP BAR COMPACTA ==========
+        MDTopAppBar:
+            title: f"Cierre - Mesa {root.mesa_seleccionada if root.mesa_seleccionada else '...'}"
+            md_bg_color: ds_color('primary')
+            elevation: 2
+            left_action_items: [["arrow-left", lambda x: root.volver_al_menu()]]
+            right_action_items: 
+                [
+                    ["refresh", lambda x: root.refrescar_datos()],
+                    ["receipt", lambda x: root.ver_tickets_generados()]
+                ]
+
+        # ========== SELECTOR MESA COMPACTO ==========
+        MDCard:
             orientation: "horizontal"
             size_hint_y: None
-            height: "60dp"
-            spacing: "10dp"
+            height: dp(56)
+            padding: ds_spacing('md')
+            spacing: ds_spacing('md')
+            elevation: 1
+            md_bg_color: ds_color('light')
 
-            Button:
-                text: "← VOLVER"
+            MDLabel:
+                text: "Mesa:"
+                font_style: "Subtitle1"
+                bold: True
                 size_hint_x: None
-                width: "100dp"
-                background_color: (0.3, 0.5, 0.8, 1)
-                on_release: root.volver_al_menu()
+                width: dp(60)
 
-            # Selector de Mesa con info
-            BoxLayout:
+            Spinner:
+                id: selector_mesa
+                text: "Seleccionar"
+                values: root.mesas_disponibles
+                size_hint_x: 1
+                background_color: ds_color('white')
+                on_text: root.cargar_pedidos_mesa(self.text)
+
+            MDLabel:
+                id: info_mesa_rapida
+                text: ""
+                font_style: "Caption"
+                theme_text_color: "Secondary"
+                size_hint_x: 0.4
+                halign: "right"
+
+        # ========== CONTENIDO PRINCIPAL ==========
+        MDBoxLayout:
+            orientation: "horizontal" if not ds_is_mobile() else "vertical"
+            spacing: ds_spacing('xs')
+
+            # ===== LISTA DE PEDIDOS (30%) =====
+            MDCard:
                 orientation: "vertical"
-                spacing: "2dp"
-                
-                Spinner:
-                    id: selector_mesa
-                    text: "Seleccionar Mesa"
-                    values: root.mesas_disponibles
-                    size_hint_y: 0.6
-                    background_color: (0.2, 0.6, 0.9, 1)
-                    on_text: root.cargar_pedidos_mesa(self.text)
-                
-                Label:
-                    id: label_info_mesa
-                    text: ""
-                    size_hint_y: 0.4
-                    font_size: "11sp"
-                    color: (0.6, 0.6, 0.6, 1)
+                size_hint_x: 0.3 if not ds_is_mobile() else 1
+                size_hint_y: 0.3 if ds_is_mobile() else 1
+                elevation: 2
+                padding: 0
 
-        # ============ CONTENIDO PRINCIPAL ============
-        BoxLayout:
-            orientation: "horizontal"
-            spacing: "10dp"
-
-            # --- PANEL IZQUIERDO: LISTA DE PEDIDOS ---
-            BoxLayout:
-                orientation: "vertical"
-                size_hint_x: 0.35
-                spacing: "5dp"
-
-                Label:
-                    text: "PEDIDOS DE LA MESA"
-                    size_hint_y: None
-                    height: "30dp"
-                    bold: True
-                    font_size: "14sp"
-                    canvas.before:
-                        Color:
-                            rgba: 0.9, 0.9, 0.9, 1
-                        Rectangle:
-                            pos: self.pos
-                            size: self.size
-
-                ScrollView:
-                    canvas.before:
-                        Color:
-                            rgba: 0.95, 0.95, 0.95, 1
-                        RoundedRectangle:
-                            pos: self.pos
-                            size: self.size
-                            radius: [5]
-                    
-                    GridLayout:
-                        id: lista_pedidos
-                        cols: 1
-                        size_hint_y: None
-                        height: self.minimum_height
-                        spacing: "5dp"
-                        padding: "5dp"
-
-            # --- PANEL DERECHO: DETALLE Y ACCIONES ---
-            BoxLayout:
-                orientation: "vertical"
-                size_hint_x: 0.65
-                spacing: "5dp"
-
-                # Info del pedido seleccionado
-                BoxLayout:
+                # Header
+                MDBoxLayout:
                     orientation: "horizontal"
                     size_hint_y: None
-                    height: "35dp"
-                    padding: "10dp"
-                    spacing: "10dp"
-                    canvas.before:
-                        Color:
-                            rgba: 0.85, 0.9, 0.95, 1
-                        RoundedRectangle:
-                            pos: self.pos
-                            size: self.size
-                            radius: [5]
+                    height: dp(44)
+                    padding: ds_spacing('sm')
+                    md_bg_color: ds_color('secondary', 0.1)
 
-                    Label:
-                        id: label_pedido_actual
+                    MDLabel:
+                        text: "PEDIDOS"
+                        font_style: "Subtitle1"
+                        bold: True
+                        size_hint_x: 0.6
+
+                    MDLabel:
+                        id: label_count_pedidos
+                        text: f"{len(root.pedidos_mesa)} pedidos"
+                        font_style: "Caption"
+                        theme_text_color: "Secondary"
+                        size_hint_x: 0.4
+                        halign: "right"
+
+                # Lista scrollable
+                ScrollView:
+                    do_scroll_x: False
+                    bar_width: dp(3)
+
+                    MDBoxLayout:
+                        id: lista_pedidos
+                        orientation: "vertical"
+                        size_hint_y: None
+                        height: self.minimum_height
+                        spacing: dp(2)
+                        padding: ds_spacing('xs')
+                        adaptive_size: True
+
+            # ===== DETALLE Y ACCIONES (70%) =====
+            MDCard:
+                orientation: "vertical"
+                size_hint_x: 0.7 if not ds_is_mobile() else 1
+                size_hint_y: 0.7 if ds_is_mobile() else 1
+                elevation: 2
+                padding: 0
+                spacing: 0
+
+                # --- Header Pedido ---
+                MDBoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: None
+                    height: dp(56)
+                    padding: ds_spacing('md')
+                    md_bg_color: ds_color('primary')
+                    spacing: ds_spacing('sm')
+
+                    MDLabel:
+                        id: label_pedido_info
                         text: "Seleccione un pedido"
+                        font_style: "H6"
+                        theme_text_color: "Custom"
+                        text_color: ds_color('white')
                         bold: True
                         size_hint_x: 0.5
 
-                    Label:
+                    MDLabel:
                         id: label_total_pedido
-                        text: "Total: $0.00"
+                        text: "$0.00"
+                        font_style: "H6"
+                        theme_text_color: "Custom"
+                        text_color: ds_color('white')
                         bold: True
                         size_hint_x: 0.3
                         halign: "right"
-                    
-                    Button:
-                        text: "PAGAR TODO"
+
+                    MDRaisedButton:
+                        id: btn_pagar_completo
+                        text: "PAGAR"
+                        icon: "cash-check"
                         size_hint_x: 0.2
-                        background_color: (0.2, 0.7, 0.2, 1)
                         disabled: True
-                        id: btn_pagar_todo
+                        md_bg_color: ds_color('success')
                         on_release: root.pagar_pedido_completo()
 
-                # Detalle de items
-                BoxLayout:
+                # --- Tabla Items ---
+                MDBoxLayout:
                     orientation: "vertical"
-                    spacing: "5dp"
+                    spacing: 0
 
-                    BoxLayout:
+                    # Header tabla
+                    MDBoxLayout:
                         orientation: "horizontal"
                         size_hint_y: None
-                        height: "30dp"
-                        
-                        Label:
-                            text: "DETALLE DE PRODUCTOS"
-                            bold: True
-                            size_hint_x: 0.7
+                        height: dp(36)
+                        padding: [ds_spacing('sm'), dp(4)]
+                        md_bg_color: ds_color('gray_light')
 
-                        ToggleButton:
-                            id: toggle_dividir
-                            text: "MODO: DIVISIÓN"
-                            size_hint_x: 0.3
-                            background_color: (0.8, 0.4, 0.2, 1)
-                            state: "normal"
-                            on_state: root.cambiar_modo_division(self.state)
-
-                    # Encabezado de columnas
-                    BoxLayout:
-                        orientation: "horizontal"
-                        size_hint_y: None
-                        height: "25dp"
-                        padding: [5, 0]
-                        canvas.before:
-                            Color:
-                                rgba: 0.7, 0.7, 0.7, 1
-                            Rectangle:
-                                pos: self.pos
-                                size: self.size
-
-                        Label:
-                            text: "☐"
-                            size_hint_x: 0.08
-                            font_size: "12sp"
-                            id: check_all
-                        Label:
+                        MDLabel:
                             text: "Producto"
-                            size_hint_x: 0.42
-                            font_size: "12sp"
+                            font_style: "Caption"
                             bold: True
-                        Label:
-                            text: "Cant"
-                            size_hint_x: 0.15
-                            font_size: "12sp"
-                            bold: True
-                        Label:
-                            text: "P.Unit"
-                            size_hint_x: 0.15
-                            font_size: "12sp"
-                            bold: True
-                        Label:
-                            text: "Subtotal"
-                            size_hint_x: 0.2
-                            font_size: "12sp"
-                            bold: True
-
-                    ScrollView:
-                        canvas.before:
-                            Color:
-                                rgba: 0.98, 0.98, 0.98, 1
-                            Rectangle:
-                                pos: self.pos
-                                size: self.size
-                        
-                        GridLayout:
-                            id: detalle_items
-                            cols: 1
-                            size_hint_y: None
-                            height: self.minimum_height
-                            spacing: "2dp"
-                            padding: "5dp"
-
-                # Panel de acciones
-                BoxLayout:
-                    orientation: "vertical"
-                    size_hint_y: None
-                    height: "180dp"
-                    spacing: "5dp"
-
-                    # Métodos de pago
-                    BoxLayout:
-                        orientation: "horizontal"
-                        size_hint_y: None
-                        height: "35dp"
-                        spacing: "5dp"
-
-                        Label:
-                            text: "MÉTODO:"
-                            size_hint_x: 0.2
-                            bold: True
-
-                        ToggleButton:
-                            id: btn_efectivo
-                            text: "EFECTIVO"
-                            group: "metodo_pago"
-                            size_hint_x: 0.2
-                            background_color: (0.3, 0.6, 0.3, 1)
-                            on_state: if self.state == 'down': root.metodo_pago = "efectivo"
-
-                        ToggleButton:
-                            id: btn_tarjeta
-                            text: "TARJETA"
-                            group: "metodo_pago"
-                            size_hint_x: 0.2
-                            background_color: (0.4, 0.5, 0.8, 1)
-                            on_state: if self.state == 'down': root.metodo_pago = "tarjeta"
-
-                        ToggleButton:
-                            id: btn_transfer
-                            text: "TRANSFER"
-                            group: "metodo_pago"
-                            size_hint_x: 0.2
-                            background_color: (0.6, 0.3, 0.7, 1)
-                            on_state: if self.state == 'down': root.metodo_pago = "transferencia"
-
-                        ToggleButton:
-                            id: btn_mixto
-                            text: "MIXTO"
-                            group: "metodo_pago"
-                            size_hint_x: 0.2
-                            background_color: (0.8, 0.6, 0.2, 1)
-                            on_state: if self.state == 'down': root.metodo_pago = "mixto"
-
-                    # Descuentos y división
-                    BoxLayout:
-                        orientation: "horizontal"
-                        size_hint_y: None
-                        height: "40dp"
-                        spacing: "5dp"
-
-                        Button:
-                            text: "DESCUENTO %"
-                            background_color: (0.8, 0.5, 0.2, 1)
-                            on_release: root.aplicar_descuento("porcentaje")
-
-                        Button:
-                            text: "DESCUENTO $"
-                            background_color: (0.7, 0.4, 0.2, 1)
-                            on_release: root.aplicar_descuento("monto")
-
-                        Button:
-                            text: "DIVIDIR ÷N"
-                            background_color: (0.5, 0.3, 0.8, 1)
-                            on_release: root.dividir_entre_personas()
-
-                    # Total y botón principal
-                    BoxLayout:
-                        orientation: "horizontal"
-                        size_hint_y: None
-                        height: "50dp"
-                        padding: "10dp"
-                        spacing: "10dp"
-                        canvas.before:
-                            Color:
-                                rgba: 0.8, 0.95, 0.8, 1
-                            RoundedRectangle:
-                                pos: self.pos
-                                size: self.size
-                                radius: [5]
-
-                        Label:
-                            text: "TOTAL A PAGAR:"
-                            bold: True
-                            font_size: "16sp"
                             size_hint_x: 0.5
 
-                        Label:
+                        MDLabel:
+                            text: "Cant."
+                            font_style: "Caption"
+                            bold: True
+                            size_hint_x: 0.15
+                            halign: "center"
+
+                        MDLabel:
+                            text: "Precio"
+                            font_style: "Caption"
+                            bold: True
+                            size_hint_x: 0.2
+                            halign: "right"
+
+                        MDLabel:
+                            text: "Subtotal"
+                            font_style: "Caption"
+                            bold: True
+                            size_hint_x: 0.15
+                            halign: "right"
+
+                    # Contenido scrollable
+                    ScrollView:
+                        do_scroll_x: False
+                        bar_width: dp(3)
+
+                        MDBoxLayout:
+                            id: detalle_items
+                            orientation: "vertical"
+                            size_hint_y: None
+                            height: self.minimum_height
+                            spacing: dp(1)
+                            adaptive_size: True
+
+                # --- Panel Métodos Pago ---
+                MDCard:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: dp(100)
+                    padding: ds_spacing('md')
+                    spacing: ds_spacing('sm')
+                    md_bg_color: ds_color('light')
+                    elevation: 0
+
+                    MDLabel:
+                        text: "MÉTODO DE PAGO"
+                        font_style: "Caption"
+                        bold: True
+                        size_hint_y: None
+                        height: dp(20)
+
+                    MDBoxLayout:
+                        orientation: "horizontal"
+                        spacing: ds_spacing('xs')
+
+                        MDChip:
+                            id: chip_efectivo
+                            text: "💵 Efectivo"
+                            on_press: root.seleccionar_metodo('efectivo')
+
+                        MDChip:
+                            id: chip_tarjeta
+                            text: "💳 Tarjeta"
+                            on_press: root.seleccionar_metodo('tarjeta')
+
+                        MDChip:
+                            id: chip_transfer
+                            text: "📱 Transfer"
+                            on_press: root.seleccionar_metodo('transferencia')
+
+                # --- Footer: Total y Confirmar ---
+                MDBoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: None
+                    height: dp(70)
+                    padding: ds_spacing('md')
+                    spacing: ds_spacing('md')
+                    md_bg_color: ds_color('success', 0.05)
+
+                    MDBoxLayout:
+                        orientation: "vertical"
+                        size_hint_x: 0.4
+                        spacing: dp(2)
+
+                        MDLabel:
+                            text: "TOTAL A PAGAR"
+                            font_style: "Caption"
+                            theme_text_color: "Secondary"
+                            size_hint_y: None
+                            height: dp(18)
+
+                        MDLabel:
                             id: label_total_final
                             text: "$0.00"
+                            font_style: "H5"
                             bold: True
-                            font_size: "18sp"
-                            size_hint_x: 0.3
-                            halign: "right"
-                            color: (0, 0.5, 0, 1)
+                            theme_text_color: "Custom"
+                            text_color: ds_color('success')
 
-                        Button:
-                            id: btn_generar_ticket
-                            text: "GENERAR\nTICKET"
-                            size_hint_x: 0.2
-                            background_color: (0.2, 0.7, 0.2, 1)
-                            disabled: True
-                            on_release: root.generar_ticket_parcial()
-
-                    # Info de tickets generados
-                    BoxLayout:
+                    MDBoxLayout:
                         orientation: "horizontal"
-                        size_hint_y: None
-                        height: "30dp"
-                        
-                        Label:
-                            id: label_tickets_info
-                            text: ""
-                            font_size: "11sp"
-                            color: (0.4, 0.4, 0.8, 1)
-                            italic: True
+                        size_hint_x: 0.6
+                        spacing: ds_spacing('sm')
+
+                        MDFlatButton:
+                            text: "DESCUENTO"
+                            icon: "sale"
+                            on_release: root.aplicar_descuento()
+
+                        MDRaisedButton:
+                            id: btn_confirmar_pago
+                            text: "CONFIRMAR PAGO"
+                            icon: "check-bold"
+                            disabled: True
+                            md_bg_color: ds_color('success')
+                            on_release: root.procesar_pago_final()
+
+
+# ========== WIDGET: ITEM PEDIDO COMPACTO ==========
+<PedidoItemCompact@MDCard>:
+    orientation: "vertical"
+    size_hint_y: None
+    height: dp(68)
+    padding: ds_spacing('sm')
+    spacing: dp(4)
+    radius: dp(8)
+    elevation: 1
+    ripple_behavior: True
+    
+    pedido_id: 0
+    pedido_total: 0.0
+    pedido_estado: ""
+    num_items: 0
+    
+    md_bg_color: ds_color('white')
+    
+    MDBoxLayout:
+        orientation: "horizontal"
+        spacing: dp(8)
+        
+        # Número pedido
+        MDLabel:
+            text: f"#{root.pedido_id}"
+            font_style: "H6"
+            bold: True
+            size_hint_x: 0.2
+            theme_text_color: "Primary"
+        
+        # Info
+        MDBoxLayout:
+            orientation: "vertical"
+            size_hint_x: 0.5
+            spacing: dp(2)
+            
+            MDLabel:
+                text: f"{root.num_items} items"
+                font_style: "Caption"
+                theme_text_color: "Secondary"
+            
+            MDLabel:
+                text: root.pedido_estado.upper()
+                font_style: "Caption"
+                theme_text_color: "Primary"
+                bold: True
+        
+        # Total
+        MDLabel:
+            text: f"${root.pedido_total:.2f}"
+            font_style: "Subtitle1"
+            bold: True
+            size_hint_x: 0.3
+            halign: "right"
+            theme_text_color: "Custom"
+            text_color: ds_color('success')
+
+
+# ========== WIDGET: FILA ITEM TABLA ==========
+<ItemFilaTabla@MDBoxLayout>:
+    orientation: "horizontal"
+    size_hint_y: None
+    height: dp(44)
+    padding: [ds_spacing('sm'), dp(6)]
+    spacing: dp(4)
+    
+    item_nombre: ""
+    item_cantidad: 1
+    item_precio: 0.0
+    item_subtotal: 0.0
+    
+    canvas.before:
+        Color:
+            rgba: ds_color('white') if self.parent and self.parent.children.index(self) % 2 == 0 else ds_color('light')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    
+    MDLabel:
+        text: root.item_nombre
+        font_style: "Body2"
+        size_hint_x: 0.5
+        shorten: True
+        shorten_from: "right"
+    
+    MDLabel:
+        text: str(root.item_cantidad)
+        font_style: "Body2"
+        size_hint_x: 0.15
+        halign: "center"
+    
+    MDLabel:
+        text: f"${root.item_precio:.2f}"
+        font_style: "Body2"
+        size_hint_x: 0.2
+        halign: "right"
+    
+    MDLabel:
+        text: f"${root.item_subtotal:.2f}"
+        font_style: "Subtitle2"
+        bold: True
+        size_hint_x: 0.15
+        halign: "right"
+        theme_text_color: "Custom"
+        text_color: ds_color('success')

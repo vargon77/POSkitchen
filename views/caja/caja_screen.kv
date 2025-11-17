@@ -1,211 +1,372 @@
-# views/caja/caja_screen.kv
+# views/caja/caja_screen.kv - DISEÑO PROFESIONAL
 <CajaScreen>:
     name: "caja"
     
-    BoxLayout:
+    MDBoxLayout:
         orientation: "vertical"
-        spacing: "10dp"
-        padding: "15dp"
+        spacing: 0
+        padding: 0
 
-        # Header con botón de menú
-        BoxLayout:
+        # ========== TOP BAR ==========
+        MDTopAppBar:
+            title: "💰 Módulo de Caja"
+            md_bg_color: ds_color('primary')
+            elevation: 2
+            left_action_items: [["arrow-left", lambda x: app.cambiar_pantalla("menu")]]
+            right_action_items: 
+                [
+                    ["history", lambda x: root.ver_historial_cierres()],
+                    ["refresh", lambda x: root.forzar_actualizacion()]
+                ]
+
+        # ========== ESTADO CAJA Y CONTROLES ==========
+        MDCard:
             orientation: "horizontal"
             size_hint_y: None
-            height: "50dp"
-            spacing: "10dp"
+            height: dp(80)
+            padding: ds_spacing('md')
+            spacing: ds_spacing('md')
+            elevation: 2
+            md_bg_color: ds_color('light')
 
-            Button:
-                text: "☰"
-                size_hint_x: None
-                width: "50dp"
-                background_color: (0.3, 0.5, 0.8, 1)
-                background_normal: ''
-                on_release: app.abrir_menu()
-                
-            Label:
-                text: "💰 MÓDULO DE CAJA"
-                font_size: '20sp'
-                bold: True
-                halign: "left"
-                color: (0.2, 0.2, 0.2, 1)
-                size_hint_x: 0.7
-
-            Button:
-                text: "🔄"
-                size_hint_x: None
-                width: "50dp"
-                background_color: (0.3, 0.5, 0.8, 1)
-                background_normal: ''
-                on_release: root.forzar_actualizacion()
-
-        # Tarjeta de Estado de Caja
-        BoxLayout:
-            orientation: "vertical"
-            padding: "20dp"
-            spacing: "10dp"
-            size_hint_y: None
-            height: "120dp"
-            canvas.before:
-                Color:
-                    rgba: (1, 1, 1, 1)
-                RoundedRectangle:
-                    pos: self.pos
-                    size: self.size
-                    radius: [10]
-
-            Label:
-                text: "ESTADO ACTUAL DE CAJA"
-                font_size: '16sp'
-                color: (0.5, 0.5, 0.5, 1)
-                halign: "center"
-                size_hint_y: None
-                height: self.texture_size[1]
-
-            Label:
-                id: label_estado
-                text: root.estado_caja
-                font_size: '20sp'
-                halign: "center"
-                bold: True
-                color: (0.2, 0.2, 0.2, 1)
-                size_hint_y: None
-                height: self.texture_size[1]
-
-        # Tarjeta de Estadísticas
-        BoxLayout:
-            orientation: "vertical"
-            padding: "15dp"
-            size_hint_y: None
-            height: "80dp"
-            canvas.before:
-                Color:
-                    rgba: (1, 1, 1, 1)
-                RoundedRectangle:
-                    pos: self.pos
-                    size: self.size
-                    radius: [10]
-
-            Label:
-                id: label_estadisticas
-                text: "Ventas Hoy: $0.00 | Efectivo: $0.00 | Tarjeta: $0.00 | Transferencia: $0.00"
-                font_size: '14sp'
-                color: (0.5, 0.5, 0.5, 1)
-                halign: "center"
-                text_size: self.width - 20, None
-                size_hint_y: None
-                height: self.texture_size[1]
-
-        # Controles de Caja
-        BoxLayout:
-            orientation: "horizontal"
-            size_hint_y: None
-            height: "60dp"
-            spacing: "10dp"
-            padding: "5dp"
-
-            Button:
-                id: btn_abrir
-                text: "ABRIR CAJA"
-                background_color: (0.2, 0.7, 0.2, 1)
-                background_normal: ''
-                on_release: root.abrir_caja()
-                disabled: root.caja_abierta
-
-            Button:
-                id: btn_cerrar
-                text: "CERRAR CAJA"
-                background_color: (0.8, 0.3, 0.3, 1)
-                background_normal: ''
-                on_release: root.cerrar_caja()
-                disabled: not root.caja_abierta
-        
-    
-        # Separador
-        BoxLayout:        
-            orientation: "horizontal"
-            size_hint_y: None
-            height: "50dp"
-            spacing: "10dp"
-            padding: "5dp"
-            
-            canvas:
-                Color:
-                    rgba: 0.7, 0.7, 0.7, 0.5
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-
-
-            Button:
-                text: "📅 VER HISTORIAL"
-                background_color: (0.5, 0.3, 0.8, 1)
-                background_normal: ''
-                on_release: root.ver_historial_cierres()
-
-            Button:
-                text: "🔄 ACTUALIZAR"
-                background_color: (0.3, 0.5, 0.8, 1)
-                background_normal: ''
-                on_release: root.forzar_actualizacion()
-
-            Button:
-                text: "💰 ARQUEO"
-                background_color: (0.8, 0.6, 0.2, 1)
-                background_normal: ''
-                on_release: root.realizar_arqueo()
-
-            Button:
-                text: "📊 HIST. ARQUEOS"
-                background_color: (0.5, 0.3, 0.8, 1)
-                background_normal: ''
-                on_release: root.ver_historial_arqueos()
-
-            Button:
-                text: "📅 HIST. CIERRES"
-                background_color: (0.3, 0.5, 0.8, 1)
-                background_normal: ''
-                on_release: root.ver_historial_cierres()
-
-            Button:
-                text: "🎫 TEST TICKET"
-                background_color: (0.1, 0.6, 0.3, 1)
-                background_normal: ''
-                on_release: root.test_ticket()
-
-            Button:
-                text: "👨‍🍳 TICKET COCINA"
-                background_color: (0.8, 0.4, 0.1, 1)
-                background_normal: ''
-                on_release: root.test_ticket_cocina()
-
-            Button:
-                text: "🐛 DEBUG"
-                background_color: (0.8, 0.2, 0.2, 1)
-                background_normal: ''
-                on_release: root.debug_pedidos()
-
-
-
-            
-        # Título de Pedidos Pendientes
-        Label:
-            text: "PEDIDOS PENDIENTES DE PAGO"
-            font_size: '18sp'
-            color: (0.5, 0.5, 0.5, 1)
-            size_hint_y: None
-            height: "30dp"
-            halign: "center"
-            bold: True
-
-        # Lista de Pedidos
-        ScrollView:
-            bar_width: "8dp"
-            bar_color: 0.3, 0.5, 0.8, 0.8
-
-            BoxLayout:
-                id: contenedor_pedidos
+            # Estado actual
+            MDBoxLayout:
                 orientation: "vertical"
-                spacing: "10dp"
+                size_hint_x: 0.4
+                spacing: dp(4)
+                
+                MDLabel:
+                    text: "ESTADO DE CAJA"
+                    font_style: "Caption"
+                    theme_text_color: "Secondary"
+                    size_hint_y: 0.4
+                
+                MDLabel:
+                    id: label_estado_caja
+                    text: root.estado_caja
+                    font_style: "H6"
+                    bold: True
+                    theme_text_color: "Custom"
+                    text_color: ds_color('success') if root.caja_abierta else ds_color('error')
+                    size_hint_y: 0.6
+
+            # Botones control
+            MDBoxLayout:
+                orientation: "horizontal"
+                size_hint_x: 0.6
+                spacing: ds_spacing('xs')
+
+                MDRaisedButton:
+                    id: btn_abrir_caja
+                    text: "ABRIR CAJA"
+                    icon: "lock-open"
+                    disabled: root.caja_abierta
+                    md_bg_color: ds_color('success')
+                    on_release: root.abrir_caja()
+
+                MDRaisedButton:
+                    id: btn_cerrar_caja
+                    text: "CERRAR CAJA"
+                    icon: "lock"
+                    disabled: not root.caja_abierta
+                    md_bg_color: ds_color('error')
+                    on_release: root.cerrar_caja()
+
+                MDRaisedButton:
+                    text: "ARQUEO"
+                    icon: "cash-multiple"
+                    disabled: not root.caja_abierta
+                    md_bg_color: ds_color('warning')
+                    on_release: root.realizar_arqueo()
+
+        # ========== ESTADÍSTICAS DEL DÍA ==========
+        MDCard:
+            orientation: "vertical"
+            size_hint_y: None
+            height: dp(100)
+            padding: ds_spacing('md')
+            spacing: ds_spacing('sm')
+            elevation: 1
+            md_bg_color: ds_color('white')
+
+            MDLabel:
+                text: "📊 RESUMEN DEL DÍA"
+                font_style: "Subtitle1"
+                bold: True
                 size_hint_y: None
-                height: self.minimum_height
-                padding: "5dp"
+                height: dp(25)
+
+            MDGridLayout:
+                cols: 4
+                spacing: ds_spacing('sm')
+                size_hint_y: None
+                height: dp(60)
+
+                # Total ventas
+                EstadisticaCard:
+                    titulo: "Total Ventas"
+                    valor: f"${root.total_ventas:.2f}"
+                    icono: "💰"
+                    color_fondo: ds_color('success', 0.1)
+
+                # Efectivo
+                EstadisticaCard:
+                    titulo: "Efectivo"
+                    valor: f"${root.total_efectivo:.2f}"
+                    icono: "💵"
+                    color_fondo: ds_color('warning', 0.1)
+
+                # Tarjeta
+                EstadisticaCard:
+                    titulo: "Tarjeta"
+                    valor: f"${root.total_tarjeta:.2f}"
+                    icono: "💳"
+                    color_fondo: ds_color('info', 0.1)
+
+                # Transferencia
+                EstadisticaCard:
+                    titulo: "Transfer"
+                    valor: f"${root.total_transferencia:.2f}"
+                    icono: "📱"
+                    color_fondo: ds_color('secondary', 0.1)
+
+        # ========== SECCIÓN PEDIDOS PENDIENTES ==========
+        MDBoxLayout:
+            orientation: "vertical"
+            spacing: dp(8)
+
+            # Header con tabs
+            MDBoxLayout:
+                orientation: "horizontal"
+                size_hint_y: None
+                height: dp(48)
+                padding: [ds_spacing('md'), 0]
+                spacing: ds_spacing('sm')
+                md_bg_color: ds_color('light')
+
+                MDLabel:
+                    text: "PEDIDOS LISTOS PARA PAGAR"
+                    font_style: "Subtitle1"
+                    bold: True
+                    size_hint_x: 0.6
+
+                MDChip:
+                    id: chip_todos_pedidos
+                    text: "TODOS"
+                    selected: True
+                    on_press: root.filtrar_pedidos('todos')
+
+                MDChip:
+                    id: chip_listos
+                    text: "LISTOS"
+                    on_press: root.filtrar_pedidos('listo')
+
+                MDLabel:
+                    id: label_count_pedidos
+                    text: f"{len(root.pedidos_pendientes)} pedidos"
+                    font_style: "Caption"
+                    theme_text_color: "Secondary"
+                    size_hint_x: 0.2
+                    halign: "right"
+
+            # Grid de pedidos
+            ScrollView:
+                do_scroll_x: False
+                bar_width: dp(4)
+                bar_color: ds_color('primary', 0.3)
+
+                MDGridLayout:
+                    id: contenedor_pedidos
+                    cols: 2 if not ds_is_mobile() else 1
+                    spacing: ds_spacing('md')
+                    padding: ds_spacing('md')
+                    size_hint_y: None
+                    height: self.minimum_height
+                    adaptive_size: True
+
+
+# ========== WIDGET: TARJETA ESTADÍSTICA ==========
+<EstadisticaCard@MDCard>:
+    orientation: "vertical"
+    padding: ds_spacing('sm')
+    spacing: dp(4)
+    elevation: 0
+    radius: dp(8)
+    
+    titulo: ""
+    valor: ""
+    icono: ""
+    color_fondo: (1, 1, 1, 1)
+    
+    md_bg_color: root.color_fondo
+    
+    MDLabel:
+        text: root.icono
+        font_size: sp(20)
+        halign: "left"
+        size_hint_y: 0.3
+    
+    MDLabel:
+        text: root.titulo
+        font_style: "Caption"
+        theme_text_color: "Secondary"
+        size_hint_y: 0.3
+    
+    MDLabel:
+        text: root.valor
+        font_style: "Subtitle1"
+        bold: True
+        theme_text_color: "Primary"
+        size_hint_y: 0.4
+
+
+# ========== WIDGET: CARD DE PEDIDO PARA PAGO ==========
+<PedidoPagoCard@MDCard>:
+    orientation: "vertical"
+    size_hint_y: None
+    height: dp(200)
+    padding: 0
+    spacing: 0
+    elevation: 2
+    radius: dp(12)
+    
+    pedido_id: 0
+    mesa: ""
+    total: 0.0
+    num_items: 0
+    mesero: ""
+    tiempo: ""
+    
+    md_bg_color: ds_color('white')
+    
+    # Header
+    MDBoxLayout:
+        orientation: "horizontal"
+        size_hint_y: None
+        height: dp(60)
+        padding: ds_spacing('sm')
+        spacing: ds_spacing('sm')
+        md_bg_color: ds_color('primary', 0.1)
+        
+        MDBoxLayout:
+            orientation: "vertical"
+            size_hint_x: 0.6
+            
+            MDLabel:
+                text: f"PEDIDO #{root.pedido_id}"
+                font_style: "H6"
+                bold: True
+                theme_text_color: "Primary"
+                size_hint_y: 0.6
+            
+            MDLabel:
+                text: f"Mesa {root.mesa} • {root.num_items} items"
+                font_style: "Caption"
+                theme_text_color: "Secondary"
+                size_hint_y: 0.4
+        
+        MDLabel:
+            text: f"${root.total:.2f}"
+            font_style: "H5"
+            bold: True
+            size_hint_x: 0.4
+            halign: "right"
+            theme_text_color: "Custom"
+            text_color: ds_color('success')
+    
+    MDSeparator:
+        height: dp(1)
+    
+    # Info mesero y tiempo
+    MDBoxLayout:
+        orientation: "horizontal"
+        size_hint_y: None
+        height: dp(30)
+        padding: [ds_spacing('sm'), dp(4)]
+        
+        MDLabel:
+            text: f"Mesero: {root.mesero}"
+            font_style: "Caption"
+            theme_text_color: "Secondary"
+            size_hint_x: 0.6
+        
+        MDLabel:
+            text: root.tiempo
+            font_style: "Caption"
+            theme_text_color: "Hint"
+            size_hint_x: 0.4
+            halign: "right"
+    
+    MDSeparator:
+        height: dp(1)
+    
+    # Botones de pago
+    MDBoxLayout:
+        orientation: "horizontal"
+        size_hint_y: None
+        height: dp(90)
+        spacing: dp(4)
+        padding: ds_spacing('sm')
+        
+        MDBoxLayout:
+            orientation: "vertical"
+            spacing: dp(4)
+            
+            MDRaisedButton:
+                text: "EFECTIVO"
+                icon: "cash"
+                md_bg_color: ds_color('success')
+                size_hint_y: 0.5
+                on_release: root.pagar_efectivo()
+            
+            MDRaisedButton:
+                text: "TARJETA"
+                icon: "credit-card"
+                md_bg_color: ds_color('info')
+                size_hint_y: 0.5
+                on_release: root.pagar_tarjeta()
+        
+        MDBoxLayout:
+            orientation: "vertical"
+            spacing: dp(4)
+            
+            MDRaisedButton:
+                text: "TRANSFER"
+                icon: "bank-transfer"
+                md_bg_color: ds_color('secondary')
+                size_hint_y: 0.5
+                on_release: root.pagar_transferencia()
+            
+            MDFlatButton:
+                text: "VER DETALLE"
+                icon: "eye"
+                size_hint_y: 0.5
+                on_release: root.ver_detalle()
+
+
+# ========== ESTADO VACÍO ==========
+<CajaEmptyState@MDBoxLayout>:
+    orientation: "vertical"
+    padding: dp(40)
+    spacing: dp(20)
+    
+    MDLabel:
+        text: "💰"
+        font_size: sp(64)
+        halign: "center"
+        size_hint_y: None
+        height: dp(80)
+    
+    MDLabel:
+        text: "Sin pedidos pendientes de pago"
+        font_style: "H6"
+        halign: "center"
+        theme_text_color: "Secondary"
+        size_hint_y: None
+        height: dp(40)
+    
+    MDLabel:
+        text: "Los pedidos listos aparecerán aquí"
+        font_style: "Body2"
+        halign: "center"
+        theme_text_color: "Hint"

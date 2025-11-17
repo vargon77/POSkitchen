@@ -1,4 +1,4 @@
-# main.kv (KivyMD 1.2.0)
+# main.kv (KivyMD 1.2.0) - VERSIÓN SIMPLIFICADA
 MDNavigationLayout:
 
     ScreenManager:
@@ -10,7 +10,7 @@ MDNavigationLayout:
         MenuScreen:
             name: "menu"
 
-        # Pantallas placeholder por ahora
+        # Pantallas placeholder simples
         MDScreen:
             name: "pedidos"
             MDLabel:
