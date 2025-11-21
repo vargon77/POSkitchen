@@ -1,4 +1,4 @@
-# views/cocina/cocina_screen.py - VERSIÓN PROFESIONAL
+# views/cocina/cocina_screen.py
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.card import MDCard
 from kivymd.uix.label import MDLabel
@@ -13,6 +13,7 @@ from kivy.clock import Clock
 from kivy.metrics import dp, sp
 from datetime import datetime
 from themes.design_system import ds_color, ds_spacing, ds_is_mobile
+from kivymd.app import MDApp
 
 class CocinaScreen(MDScreen):
     pedidos = ListProperty([])
@@ -45,6 +46,16 @@ class CocinaScreen(MDScreen):
         if self.actualizar_event:
             self.actualizar_event.cancel()
             print("⏹️ Actualización automática detenida")
+
+    # ========== MÉTODOS PARA TOPAPPBAR ==========
+    def ir_a_menu(self, *args):
+        """Volver al menú principal"""
+        app = MDApp.get_running_app()
+        if hasattr(app, 'cambiar_pantalla'):
+            app.cambiar_pantalla("menu")
+        else:
+            self.manager.current = "menu"
+    # ========== FIN MÉTODOS TOPAPPBAR ==========
     
     def inicializar_servicios(self):
         """Inicializar servicios de cocina"""
@@ -59,7 +70,7 @@ class CocinaScreen(MDScreen):
             except Exception as e:
                 print(f"❌ Error inicializando servicios: {e}")
     
-    def cargar_pedidos(self):
+    def cargar_pedidos(self, *args):
         """Cargar pedidos activos para cocina"""
         if not self.cocina_service:
             print("❌ No hay servicio de cocina")
@@ -68,14 +79,10 @@ class CocinaScreen(MDScreen):
         try:
             print("🔄 Cargando pedidos para cocina...")
             
-            # Obtener pedidos activos
             self.pedidos = self.cocina_service.obtener_pedidos_activos()
             self.total_pedidos = len(self.pedidos)
             
-            # Calcular estadísticas
             self.calcular_estadisticas()
-            
-            # Aplicar filtro actual
             self.filtrar_pedidos(self.filtro_actual)
             
             print(f"✅ {len(self.pedidos)} pedidos cargados")
@@ -100,13 +107,11 @@ class CocinaScreen(MDScreen):
             if estado in stats:
                 stats[estado] += 1
             
-            # Calcular tiempo de espera
             created_at = pedido.get('created_at')
             if created_at:
                 tiempo_min = self._calcular_minutos_espera(created_at)
                 tiempos.append(tiempo_min)
         
-        # Tiempo promedio
         if tiempos:
             stats['tiempo_promedio'] = sum(tiempos) // len(tiempos)
         
@@ -143,10 +148,7 @@ class CocinaScreen(MDScreen):
                 if p.get('estado') == filtro
             ]
         
-        # Actualizar visual de chips
         self.actualizar_chips_filtro(filtro)
-        
-        # Actualizar UI
         self.actualizar_grid_pedidos()
         
         print(f"🔍 Filtro: {filtro} - {len(self.pedidos_filtrados)} pedidos")
@@ -181,12 +183,10 @@ class CocinaScreen(MDScreen):
         self.ids.grid_pedidos.clear_widgets()
         
         if not self.pedidos_filtrados:
-            # Estado vacío
             empty_state = CocinaEmptyState()
             self.ids.grid_pedidos.add_widget(empty_state)
             return
         
-        # Crear cards de pedidos
         for pedido in self.pedidos_filtrados:
             card = PedidoCocinaCard(
                 pedido_id=pedido['id'],
@@ -204,10 +204,7 @@ class CocinaScreen(MDScreen):
         print(f"🔄 Cambiando pedido {pedido_id} a {nuevo_estado}")
         
         if self.cocina_service and self.cocina_service.cambiar_estado_pedido(pedido_id, nuevo_estado):
-            # Recargar después de un delay
             Clock.schedule_once(lambda dt: self.cargar_pedidos(), 0.5)
-            
-            # Mostrar confirmación
             self.mostrar_info(f"✅ Pedido {pedido_id} → {nuevo_estado.upper()}")
         else:
             self.mostrar_error("Error cambiando estado")
@@ -227,7 +224,6 @@ class CocinaScreen(MDScreen):
             height=dp(300)
         )
         
-        # Título
         content.add_widget(MDLabel(
             text=f"PEDIDO #{pedido['id']} - Mesa {pedido['mesa']}",
             font_style="H6",
@@ -237,7 +233,6 @@ class CocinaScreen(MDScreen):
             height=dp(30)
         ))
         
-        # Tiempo
         content.add_widget(MDLabel(
             text=f"⏱️ {self._formato_tiempo_espera(pedido['created_at'])}",
             font_style="Subtitle1",
@@ -246,15 +241,14 @@ class CocinaScreen(MDScreen):
             height=dp(25)
         ))
         
-        # Items en scroll
         scroll = ScrollView(size_hint_y=None, height=dp(150))
         items_box = MDBoxLayout(
             orientation='vertical',
             size_hint_y=None,
-            height=self.minimum_height,
             spacing=dp(8),
             padding=dp(10)
         )
+        items_box.bind(minimum_height=items_box.setter('height'))
         
         for item in pedido['items']:
             item_text = f"• {item['nombre']} x{item['cantidad']}"
@@ -271,7 +265,6 @@ class CocinaScreen(MDScreen):
         scroll.add_widget(items_box)
         content.add_widget(scroll)
         
-        # Mesero
         content.add_widget(MDLabel(
             text=f"Mesero: {pedido['mesero']}",
             font_style="Caption",
@@ -295,7 +288,7 @@ class CocinaScreen(MDScreen):
         )
         self.dialog.open()
     
-    def ver_alertas(self):
+    def ver_alertas(self, *args):
         """Ver pedidos con tiempo excedido"""
         pedidos_urgentes = [
             p for p in self.pedidos 

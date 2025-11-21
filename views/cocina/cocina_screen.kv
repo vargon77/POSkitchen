@@ -1,24 +1,20 @@
-# views/cocina/cocina_screen.kv - DISEÑO PROFESIONAL
+# views/cocina/cocina_screen.kv - SOLO WIDGETS RESPONSIVOS
 <CocinaScreen>:
-    MDBoxLayout:
+    ResponsiveBoxLayout:
         orientation: "vertical"
-        spacing: 0
-        padding: 0
+        responsive_spacing: "none"
+        responsive_padding: "none"
 
-        # ========== TOP BAR CON ESTADÍSTICAS ==========
+        # ========== TOP BAR ==========
         MDTopAppBar:
             title: "👨‍🍳 Vista Cocina"
             md_bg_color: ds_color('primary')
             elevation: 2
-            left_action_items: [["arrow-left", lambda x: app.cambiar_pantalla("menu")]]
-            right_action_items: 
-                [
-                    ["bell-ring", lambda x: root.ver_alertas()],
-                    ["refresh", lambda x: root.cargar_pedidos()]
-                ]
+            left_action_items: [["arrow-left", root.ir_a_menu]]
+            right_action_items: [["bell-ring", root.ver_alertas], ["refresh", root.cargar_pedidos]]
 
         # ========== PANEL ESTADÍSTICAS RÁPIDAS ==========
-        MDCard:
+        ResponsiveCard:
             orientation: "horizontal"
             size_hint_y: None
             height: dp(70)
@@ -28,7 +24,7 @@
             md_bg_color: ds_color('light')
 
             # Pendientes
-            MDBoxLayout:
+            ResponsiveBoxLayout:
                 orientation: "vertical"
                 size_hint_x: 0.25
                 
@@ -50,7 +46,7 @@
                     text_color: ds_color('warning')
 
             # En preparación
-            MDBoxLayout:
+            ResponsiveBoxLayout:
                 orientation: "vertical"
                 size_hint_x: 0.25
                 
@@ -72,7 +68,7 @@
                     text_color: ds_color('info')
 
             # Listos
-            MDBoxLayout:
+            ResponsiveBoxLayout:
                 orientation: "vertical"
                 size_hint_x: 0.25
                 
@@ -94,7 +90,7 @@
                     text_color: ds_color('success')
 
             # Tiempo promedio
-            MDBoxLayout:
+            ResponsiveBoxLayout:
                 orientation: "vertical"
                 size_hint_x: 0.25
                 
@@ -115,7 +111,7 @@
                     theme_text_color: "Primary"
 
         # ========== FILTROS RÁPIDOS ==========
-        MDCard:
+        ResponsiveCard:
             orientation: "horizontal"
             size_hint_y: None
             height: dp(50)
@@ -131,45 +127,44 @@
                 size_hint_x: None
                 width: dp(60)
 
-            MDChip:
+            ResponsiveChip:
                 id: chip_todos
                 text: "TODOS"
                 selected: True
                 on_press: root.filtrar_pedidos('todos')
 
-            MDChip:
+            ResponsiveChip:
                 id: chip_pendientes
                 text: "PENDIENTES"
                 on_press: root.filtrar_pedidos('pendiente')
 
-            MDChip:
+            ResponsiveChip:
                 id: chip_preparacion
                 text: "EN PREP."
                 on_press: root.filtrar_pedidos('preparacion')
 
-            MDChip:
+            ResponsiveChip:
                 id: chip_listos_filtro
                 text: "LISTOS"
                 on_press: root.filtrar_pedidos('listo')
 
         # ========== GRID DE PEDIDOS ==========
-        ScrollView:
+        ResponsiveScrollView:
             do_scroll_x: False
             bar_width: dp(4)
             bar_color: ds_color('primary', 0.3)
 
-            MDGridLayout:
+            ResponsiveGridLayout:
                 id: grid_pedidos
-                cols: 3 if not ds_is_mobile() else 1
+                default_cols: 3
                 spacing: ds_spacing('md')
                 padding: ds_spacing('md')
                 size_hint_y: None
                 height: self.minimum_height
-                adaptive_size: True
 
 
 # ========== WIDGET: CARD DE PEDIDO COCINA ==========
-<PedidoCocinaCard@MDCard>:
+<PedidoCocinaCard>:
     orientation: "vertical"
     size_hint_y: None
     height: dp(280) if not ds_is_mobile() else dp(260)
@@ -177,15 +172,6 @@
     spacing: 0
     elevation: 3
     radius: dp(12)
-    
-    pedido_id: 0
-    mesa: ""
-    estado: "pendiente"
-    tiempo_espera: ""
-    items_text: ""
-    mesero: ""
-    
-    # Color del borde según estado
     md_bg_color: ds_color('white')
     
     canvas.before:
@@ -197,15 +183,21 @@
             radius: [dp(12), dp(12), 0, 0]
     
     # Header del pedido
-    MDBoxLayout:
+    ResponsiveBoxLayout:
         orientation: "horizontal"
         size_hint_y: None
         height: dp(60)
-        padding: ds_spacing('sm')
-        spacing: ds_spacing('sm')
-        md_bg_color: root.color_estado_light
+        responsive_padding: "sm"
+        responsive_spacing: "sm"
         
-        MDBoxLayout:
+        canvas.before:
+            Color:
+                rgba: root.color_estado_light
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        
+        ResponsiveBoxLayout:
             orientation: "vertical"
             size_hint_x: 0.5
             
@@ -222,7 +214,7 @@
                 theme_text_color: "Secondary"
                 size_hint_y: 0.4
         
-        MDBoxLayout:
+        ResponsiveBoxLayout:
             orientation: "vertical"
             size_hint_x: 0.5
             
@@ -242,12 +234,11 @@
                 theme_text_color: "Secondary"
                 size_hint_y: 0.4
     
-    # Separador
-    MDSeparator:
+    ResponsiveSeparator:
         height: dp(1)
     
     # Items del pedido
-    ScrollView:
+    ResponsiveScrollView:
         size_hint_y: None
         height: dp(120)
         do_scroll_x: False
@@ -257,22 +248,25 @@
             text: root.items_text
             font_style: "Body2"
             size_hint_y: None
-            height: self.texture_size[1]
+            height: self.minimum_height
             padding: [ds_spacing('sm'), ds_spacing('xs')]
-            text_size: self.width - dp(16), None
-            theme_text_color: "Primary"
     
-    # Separador
-    MDSeparator:
+    ResponsiveSeparator:
         height: dp(1)
     
     # Info mesero
-    MDBoxLayout:
+    ResponsiveBoxLayout:
         orientation: "horizontal"
         size_hint_y: None
         height: dp(30)
         padding: [ds_spacing('sm'), dp(4)]
-        md_bg_color: ds_color('light')
+        
+        canvas.before:
+            Color:
+                rgba: ds_color('light')
+            Rectangle:
+                pos: self.pos
+                size: self.size
         
         MDLabel:
             text: f"Mesero: {root.mesero}"
@@ -280,21 +274,20 @@
             theme_text_color: "Secondary"
     
     # Botones de acción
-    MDBoxLayout:
+    ResponsiveBoxLayout:
         orientation: "horizontal"
         size_hint_y: None
         height: dp(50)
         spacing: dp(4)
         padding: [ds_spacing('xs'), ds_spacing('xs')]
         
-        MDRaisedButton:
-            id: btn_accion_principal
+        ResponsiveMDRaisedButton:
             text: root.texto_boton_principal
             icon: root.icono_boton_principal
             md_bg_color: root.color_boton_principal
             on_release: root.accion_principal()
         
-        MDIconButton:
+        ResponsiveMDIconButton:
             icon: "information-outline"
             theme_icon_color: "Custom"
             icon_color: ds_color('info')
@@ -302,7 +295,7 @@
 
 
 # ========== ESTADO VACÍO ==========
-<CocinaEmptyState@MDBoxLayout>:
+<CocinaEmptyState>:
     orientation: "vertical"
     padding: dp(40)
     spacing: dp(20)

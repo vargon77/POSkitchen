@@ -1,162 +1,210 @@
-# views/config/config_screen.kv 
+# views/configuracion/config_screen.kv
 <ConfigScreen>:
     name: "config"
     
-    BoxLayout:
+    MDBoxLayout:
         orientation: "vertical"
-        spacing: "10dp"
-        padding: "20dp"
+        spacing: 0
+        padding: 0
+        md_bg_color: ds_color('light')
 
-        # Header
-        BoxLayout:
-            orientation: "horizontal"
-            size_hint_y: None
-            height: "50dp"
-            spacing: "10dp"
+        # ========== TOP BAR ==========
+        MDTopAppBar:
+            title: "⚙️ Configuración de Empresa"
+            md_bg_color: ds_color('primary')
+            elevation: 2
+            left_action_items: [["arrow-left", root.ir_a_menu]]
+            right_action_items: [["content-save", root.guardar_configuracion]]
 
-            Button:
-                text: "←"
-                size_hint_x: None
-                width: "50dp"
-                background_color: (0.3, 0.5, 0.8, 1)
-                background_normal: ''
-                on_release: root.manager.current = "menu"  # CORREGIDO
-                
-            Label:
-                text: "⚙️ CONFIGURACIÓN DE EMPRESA"
-                font_size: '20sp'
-                bold: True
-                halign: "left"
-                color: (0.2, 0.2, 0.2, 1)
-
+        # ========== CONTENIDO PRINCIPAL ==========
         ScrollView:
-            BoxLayout:
+            do_scroll_x: False
+            bar_width: dp(4)
+            bar_color: ds_color('primary', 0.3)
+
+            MDBoxLayout:
                 orientation: "vertical"
-                spacing: "15dp"
+                spacing: ds_spacing('lg')
+                padding: ds_spacing('xl')
                 size_hint_y: None
                 height: self.minimum_height
-                padding: "10dp"
 
-                # Nombre de la empresa
-                BoxLayout:
+                # ===== SECCIÓN: DATOS DE LA EMPRESA =====
+                MDCard:
                     orientation: "vertical"
+                    padding: ds_spacing('lg')
+                    spacing: ds_spacing('md')
+                    elevation: 2
                     size_hint_y: None
-                    height: "80dp"
+                    height: self.minimum_height
+                    radius: dp(12)
 
-                    Label:
-                        text: "Nombre de la Empresa:"
-                        font_size: '16sp'
+                    MDLabel:
+                        text: "🏢 DATOS DE LA EMPRESA"
+                        font_style: "H6"
                         bold: True
+                        theme_text_color: "Primary"
                         size_hint_y: None
-                        height: "30dp"
+                        height: dp(40)
 
-                    TextInput:
-                        id: input_nombre
-                        hint_text: "Ej: Mi Restaurante S.A. de C.V."
-                        multiline: False
+                    MDSeparator:
+                        height: dp(1)
+
+                    # Campo: Nombre
+                    MDBoxLayout:
+                        orientation: "vertical"
+                        spacing: dp(8)
                         size_hint_y: None
-                        height: "40dp"
-                        write_tab: False
+                        height: dp(80)
 
-                # Dirección
-                BoxLayout:
+                        MDLabel:
+                            text: "Nombre de la Empresa *"
+                            font_style: "Body2"
+                            bold: True
+                            size_hint_y: None
+                            height: dp(20)
+
+                        MDTextField:
+                            id: input_nombre
+                            hint_text: "Ej: Mi Restaurante S.A. de C.V."
+                            mode: "rectangle"
+                            size_hint_y: None
+                            height: dp(48)
+                            max_text_length: 100
+
+                    # Campo: Dirección
+                    MDBoxLayout:
+                        orientation: "vertical"
+                        spacing: dp(8)
+                        size_hint_y: None
+                        height: dp(80)
+
+                        MDLabel:
+                            text: "Dirección"
+                            font_style: "Body2"
+                            bold: True
+                            size_hint_y: None
+                            height: dp(20)
+
+                        MDTextField:
+                            id: input_direccion
+                            hint_text: "Ej: Av. Principal #123, Col. Centro"
+                            mode: "rectangle"
+                            size_hint_y: None
+                            height: dp(48)
+                            max_text_length: 200
+
+                    # Campo: Teléfono
+                    MDBoxLayout:
+                        orientation: "vertical"
+                        spacing: dp(8)
+                        size_hint_y: None
+                        height: dp(80)
+
+                        MDLabel:
+                            text: "Teléfono"
+                            font_style: "Body2"
+                            bold: True
+                            size_hint_y: None
+                            height: dp(20)
+
+                        MDTextField:
+                            id: input_telefono
+                            hint_text: "Ej: (555) 123-4567"
+                            mode: "rectangle"
+                            size_hint_y: None
+                            height: dp(48)
+                            max_text_length: 20
+
+                    # Campo: RFC
+                    MDBoxLayout:
+                        orientation: "vertical"
+                        spacing: dp(8)
+                        size_hint_y: None
+                        height: dp(80)
+
+                        MDLabel:
+                            text: "RFC"
+                            font_style: "Body2"
+                            bold: True
+                            size_hint_y: None
+                            height: dp(20)
+
+                        MDTextField:
+                            id: input_rfc
+                            hint_text: "Ej: XAXX010101000"
+                            mode: "rectangle"
+                            size_hint_y: None
+                            height: dp(48)
+                            max_text_length: 13
+
+                # ===== SECCIÓN: PERSONALIZACIÓN DE TICKETS =====
+                MDCard:
                     orientation: "vertical"
+                    padding: ds_spacing('lg')
+                    spacing: ds_spacing('md')
+                    elevation: 2
                     size_hint_y: None
-                    height: "80dp"
+                    height: self.minimum_height
+                    radius: dp(12)
 
-                    Label:
-                        text: "Dirección:"
-                        font_size: '16sp'
+                    MDLabel:
+                        text: "🎫 PERSONALIZACIÓN DE TICKETS"
+                        font_style: "H6"
                         bold: True
+                        theme_text_color: "Primary"
                         size_hint_y: None
-                        height: "30dp"
+                        height: dp(40)
 
-                    TextInput:
-                        id: input_direccion
-                        hint_text: "Ej: Av. Principal #123, Col. Centro"
-                        multiline: False
+                    MDSeparator:
+                        height: dp(1)
+
+                    # Campo: Leyenda Footer
+                    MDBoxLayout:
+                        orientation: "vertical"
+                        spacing: dp(8)
                         size_hint_y: None
-                        height: "40dp"
-                        write_tab: False
+                        height: dp(120)
 
-                # Teléfono
-                BoxLayout:
-                    orientation: "vertical"
+                        MDLabel:
+                            text: "Leyenda de Pie de Página"
+                            font_style: "Body2"
+                            bold: True
+                            size_hint_y: None
+                            height: dp(20)
+
+                        MDTextField:
+                            id: input_leyenda
+                            hint_text: "Ej: ¡Gracias por su preferencia!"
+                            mode: "rectangle"
+                            multiline: True
+                            size_hint_y: None
+                            height: dp(80)
+                            max_text_length: 200
+
+                # ===== BOTONES DE ACCIÓN =====
+                MDBoxLayout:
+                    orientation: "horizontal"
+                    spacing: ds_spacing('md')
                     size_hint_y: None
-                    height: "80dp"
+                    height: ds_button_height('lg')
+                    padding: [0, ds_spacing('md')]
 
-                    Label:
-                        text: "Teléfono:"
-                        font_size: '16sp'
-                        bold: True
-                        size_hint_y: None
-                        height: "30dp"
+                    MDRaisedButton:
+                        text: "CANCELAR"
+                        icon: "close"
+                        md_bg_color: ds_color('gray')
+                        size_hint_x: 0.5
+                        on_release: root.cancelar()
 
-                    TextInput:
-                        id: input_telefono
-                        hint_text: "Ej: (555) 123-4567"
-                        multiline: False
-                        size_hint_y: None
-                        height: "40dp"
-                        write_tab: False
+                    MDRaisedButton:
+                        text: "GUARDAR"
+                        icon: "content-save"
+                        md_bg_color: ds_color('success')
+                        size_hint_x: 0.5
+                        on_release: root.guardar_configuracion()
 
-                # RFC
-                BoxLayout:
-                    orientation: "vertical"
+                # Espaciador final
+                Widget:
                     size_hint_y: None
-                    height: "80dp"
-
-                    Label:
-                        text: "RFC:"
-                        font_size: '16sp'
-                        bold: True
-                        size_hint_y: None
-                        height: "30dp"
-
-                    TextInput:
-                        id: input_rfc
-                        hint_text: "Ej: XAXX010101000"
-                        multiline: False
-                        size_hint_y: None
-                        height: "40dp"
-                        write_tab: False
-
-                # Leyenda Footer
-                BoxLayout:
-                    orientation: "vertical"
-                    size_hint_y: None
-                    height: "100dp"
-
-                    Label:
-                        text: "Leyenda de Pie de Página:"
-                        font_size: '16sp'
-                        bold: True
-                        size_hint_y: None
-                        height: "30dp"
-
-                    TextInput:
-                        id: input_leyenda
-                        hint_text: "Ej: ¡Gracias por su preferencia!"
-                        multiline: True
-                        size_hint_y: None
-                        height: "60dp"
-                        write_tab: False
-
-        # Botones de acción
-        BoxLayout:
-            orientation: "horizontal"
-            size_hint_y: None
-            height: "60dp"
-            spacing: "10dp"
-
-            Button:
-                text: "GUARDAR"
-                background_color: (0.2, 0.7, 0.2, 1)
-                background_normal: ''
-                on_release: root.guardar_configuracion()
-
-            Button:
-                text: "CANCELAR"
-                background_color: (0.8, 0.3, 0.3, 1)
-                background_normal: ''
-                on_release: root.manager.current = "menu"  # CORREGIDO
+                    height: dp(20)

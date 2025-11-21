@@ -1,38 +1,48 @@
-# Archivo .gitignore para proyectos Python/Kivy/KivyMD
-
-# -----------------
-# Entorno Virtual
-# -----------------
-# El entorno virtual completo (kivyenv) no debe ser versionado.
-kivyenv/
-
-# Directorios de caché y compilación de Python
+# .gitignore
+# Python
 __pycache__/
-*.pyc
-*.o
+*.py[cod]
+*$py.class
 *.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# -----------------
-# Kivy/KivyMD
-# -----------------
-# Archivos de log/registro generados por Kivy.
+# Kivy
+*.pyc
+*.kv~
+.buildozer/
+bin/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Configuración local
+config_empresa.json  # ✅ Ignorar configuración local
 *.log
 
-# -----------------
-# IDEs y Editores Comunes
-# -----------------
-# Ignorar carpetas y archivos de configuración de editores comunes.
-.vscode/       # Visual Studio Code
-.idea/         # PyCharm/IntelliJ
-*.swp          # Vim
-*~             # Emacs/Otros backups
-.DS_Store      # macOS
+# Sistema
+.DS_Store
+Thumbs.db
 
-# -----------------
-# Distribución y Testing
-# -----------------
-# Si usas tools como Buildozer, PyInstaller o setup.py
-# (Estos directorios contienen archivos binarios/compilados)
-dist/
-build/
-*.egg-info/
+# Temporal
+tmp/
+temp/
+*.tmp

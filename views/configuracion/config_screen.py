@@ -1,183 +1,43 @@
 # views/configuracion/config_screen.py
-
 from kivymd.uix.screen import MDScreen
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.scrollview import ScrollView
-from kivy.uix.label import Label
-from kivy.uix.textinput import TextInput
-from kivy.uix.button import Button
-from kivy.uix.popup import Popup
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.button import MDRaisedButton, MDFlatButton
+from kivy.properties import StringProperty, DictProperty
+from kivy.clock import Clock
+from themes.design_system import ds_color
+from kivymd.app import MDApp
 
 class ConfigScreen(MDScreen):
+    """Pantalla de configuración de empresa - SIN _widgets_dict"""
+    
+    # Propiedades para binding
+    nombre_empresa = StringProperty("")
+    direccion = StringProperty("")
+    telefono = StringProperty("")
+    rfc = StringProperty("")
+    leyenda_footer = StringProperty("")
+    
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.config_service = None
-        self._widgets_dict = {}  # CAMBIAR: usar _widgets_dict en lugar de widgets
-        
-        # Crear UI inmediatamente
-        self.crear_ui()
-    
-    def crear_ui(self):
-        """Crear la interfaz de usuario completamente en Python"""
-        print("🛠️ Creando UI de configuración en Python...")
-        
-        # Limpiar cualquier widget existente
-        self.clear_widgets()
-        
-        # Layout principal
-        main_layout = BoxLayout(orientation='vertical', spacing=10, padding=20)
-        
-        # === HEADER ===
-        header_layout = BoxLayout(
-            orientation='horizontal', 
-            size_hint_y=None, 
-            height=50,
-            spacing=10
-        )
-        
-        # Botón de regresar
-        btn_back = Button(
-            text='←',
-            size_hint_x=None,
-            width=50,
-            background_color=(0.3, 0.5, 0.8, 1),
-            background_normal=''
-        )
-        btn_back.bind(on_release=self.ir_a_menu)
-        
-        # Título
-        lbl_title = Label(
-            text='⚙️ CONFIGURACIÓN DE EMPRESA',
-            font_size='20sp',
-            bold=True,
-            halign='left',
-            color=(0.2, 0.2, 0.2, 1)
-        )
-        
-        header_layout.add_widget(btn_back)
-        header_layout.add_widget(lbl_title)
-        main_layout.add_widget(header_layout)
-        
-        # === SCROLLVIEW PARA CONTENIDO ===
-        scroll_view = ScrollView()
-        content_layout = BoxLayout(
-            orientation='vertical',
-            spacing=15,
-            size_hint_y=None,
-            padding=10
-        )
-        content_layout.bind(minimum_height=content_layout.setter('height'))
-        
-        # === CAMPOS DE CONFIGURACIÓN ===
-        campos_config = [
-            {
-                'label': 'Nombre de la Empresa:',
-                'hint': 'Ej: Mi Restaurante S.A. de C.V.',
-                'id': 'input_nombre',
-                'multiline': False,
-                'height': 40
-            },
-            {
-                'label': 'Dirección:',
-                'hint': 'Ej: Av. Principal #123, Col. Centro',
-                'id': 'input_direccion', 
-                'multiline': False,
-                'height': 40
-            },
-            {
-                'label': 'Teléfono:',
-                'hint': 'Ej: (555) 123-4567',
-                'id': 'input_telefono',
-                'multiline': False,
-                'height': 40
-            },
-            {
-                'label': 'RFC:',
-                'hint': 'Ej: XAXX010101000',
-                'id': 'input_rfc',
-                'multiline': False,
-                'height': 40
-            },
-            {
-                'label': 'Leyenda de Pie de Página:',
-                'hint': 'Ej: ¡Gracias por su preferencia!',
-                'id': 'input_leyenda',
-                'multiline': True,
-                'height': 60
-            }
-        ]
-        
-        for campo in campos_config:
-            # Contenedor del campo
-            field_container = BoxLayout(
-                orientation='vertical',
-                size_hint_y=None,
-                height=80 if campo['height'] == 40 else 100
-            )
-            
-            # Label
-            lbl = Label(
-                text=campo['label'],
-                font_size='16sp',
-                bold=True,
-                size_hint_y=None,
-                height=30
-            )
-            field_container.add_widget(lbl)
-            
-            # TextInput
-            txt_input = TextInput(
-                hint_text=campo['hint'],
-                multiline=campo['multiline'],
-                size_hint_y=None,
-                height=campo['height'],
-                write_tab=False
-            )
-            
-            # Guardar referencia - CAMBIAR: usar _widgets_dict
-            self._widgets_dict[campo['id']] = txt_input
-            field_container.add_widget(txt_input)
-            content_layout.add_widget(field_container)
-        
-        scroll_view.add_widget(content_layout)
-        main_layout.add_widget(scroll_view)
-        
-        # === BOTONES DE ACCIÓN ===
-        btn_layout = BoxLayout(
-            orientation='horizontal',
-            size_hint_y=None,
-            height=60,
-            spacing=10
-        )
-        
-        btn_guardar = Button(
-            text='GUARDAR',
-            background_color=(0.2, 0.7, 0.2, 1),
-            background_normal=''
-        )
-        btn_guardar.bind(on_release=self.guardar_configuracion)
-        
-        btn_cancelar = Button(
-            text='CANCELAR',
-            background_color=(0.8, 0.3, 0.3, 1),
-            background_normal=''
-        )
-        btn_cancelar.bind(on_release=self.ir_a_menu)
-        
-        btn_layout.add_widget(btn_guardar)
-        btn_layout.add_widget(btn_cancelar)
-        main_layout.add_widget(btn_layout)
-        
-        # Agregar todo a la pantalla
-        self.add_widget(main_layout)
-        print("✅ UI de configuración creada exitosamente")
-        print(f"🔧 Widgets creados: {list(self._widgets_dict.keys())}")
+        self.dialog = None
     
     def on_enter(self):
         """Cuando se muestra la pantalla"""
         print("⚙️ Entrando a Configuración de Empresa")
         self.inicializar_servicios()
-        self.cargar_configuracion()
+        # Delay para asegurar que los widgets estén disponibles
+        Clock.schedule_once(self.cargar_configuracion, 0.1)
+    
+    # ========== MÉTODOS PARA TOPAPPBAR ==========
+    def ir_a_menu(self, *args):
+        """Volver al menú principal"""
+        app = MDApp.get_running_app()
+        if hasattr(app, 'cambiar_pantalla'):
+            app.cambiar_pantalla("menu")
+        else:
+            self.manager.current = "menu"
+    # ========== FIN MÉTODOS TOPAPPBAR ==========
     
     def inicializar_servicios(self):
         """Inicializar servicios de configuración"""
@@ -192,34 +52,52 @@ class ConfigScreen(MDScreen):
             except Exception as e:
                 print(f"❌ Error inicializando servicios: {e}")
     
-    def cargar_configuracion(self):
-        """Cargar configuración en la UI"""
+    def cargar_configuracion(self, dt=None):
+        """Cargar configuración en la UI usando self.ids"""
         if not self.config_service:
             print("⚠️ Servicio de configuración no disponible")
             return
         
-        config = self.config_service.obtener_config_empresa()
-        print(f"📋 Configuración cargada: {config}")
-        
-        # Cargar datos en los widgets - CAMBIAR: usar _widgets_dict
-        campos = {
-            'input_nombre': 'nombre',
-            'input_direccion': 'direccion', 
-            'input_telefono': 'telefono',
-            'input_rfc': 'rfc',
-            'input_leyenda': 'leyenda_footer'
-        }
-        
-        for widget_id, config_key in campos.items():
-            if widget_id in self._widgets_dict:
-                valor = config.get(config_key, '')
-                self._widgets_dict[widget_id].text = str(valor) if valor is not None else ''
-                print(f"   ✅ {widget_id} ← '{valor}'")
-            else:
-                print(f"   ❌ {widget_id} NO encontrado en widgets")
+        try:
+            config = self.config_service.obtener_config_empresa()
+            print(f"📋 Configuración cargada: {config}")
+            
+            # Verificar que los IDs existen
+            if not hasattr(self, 'ids'):
+                print("⚠️ self.ids no disponible aún")
+                return
+            
+            # Cargar datos en los widgets usando self.ids
+            campos = {
+                'input_nombre': 'nombre',
+                'input_direccion': 'direccion',
+                'input_telefono': 'telefono',
+                'input_rfc': 'rfc',
+                'input_leyenda': 'leyenda_footer'
+            }
+            
+            for widget_id, config_key in campos.items():
+                if widget_id in self.ids:
+                    valor = config.get(config_key, '')
+                    self.ids[widget_id].text = str(valor) if valor is not None else ''
+                    print(f"   ✅ {widget_id} ← '{valor}'")
+                else:
+                    print(f"   ⚠️ {widget_id} NO encontrado en self.ids")
+            
+            # También actualizar propiedades para binding
+            self.nombre_empresa = config.get('nombre', '')
+            self.direccion = config.get('direccion', '')
+            self.telefono = config.get('telefono', '')
+            self.rfc = config.get('rfc', '')
+            self.leyenda_footer = config.get('leyenda_footer', '')
+            
+        except Exception as e:
+            print(f"❌ Error cargando configuración: {e}")
+            import traceback
+            traceback.print_exc()
     
-    def guardar_configuracion(self, instance):
-        """Guardar configuración"""
+    def guardar_configuracion(self):
+        """Guardar configuración usando self.ids"""
         print("💾 Intentando guardar configuración...")
         
         if not self.config_service:
@@ -227,14 +105,27 @@ class ConfigScreen(MDScreen):
             return
         
         try:
-            # CAMBIAR: usar _widgets_dict
-            nueva_config = {
-                'nombre': self._widgets_dict['input_nombre'].text.strip(),
-                'direccion': self._widgets_dict['input_direccion'].text.strip(),
-                'telefono': self._widgets_dict['input_telefono'].text.strip(),
-                'rfc': self._widgets_dict['input_rfc'].text.strip(),
-                'leyenda_footer': self._widgets_dict['input_leyenda'].text.strip()
+            # Verificar que los IDs existen
+            if not hasattr(self, 'ids'):
+                self.mostrar_error("Error: widgets no disponibles")
+                return
+            
+            # Obtener datos de los widgets usando self.ids
+            nueva_config = {}
+            campos = {
+                'input_nombre': 'nombre',
+                'input_direccion': 'direccion',
+                'input_telefono': 'telefono',
+                'input_rfc': 'rfc',
+                'input_leyenda': 'leyenda_footer'
             }
+            
+            for widget_id, config_key in campos.items():
+                if widget_id in self.ids:
+                    nueva_config[config_key] = self.ids[widget_id].text.strip()
+                else:
+                    print(f"⚠️ {widget_id} no encontrado")
+                    nueva_config[config_key] = ''
             
             print(f"📦 Datos a guardar: {nueva_config}")
             
@@ -243,48 +134,55 @@ class ConfigScreen(MDScreen):
                 self.mostrar_error("El nombre de la empresa es requerido")
                 return
             
+            # Guardar
             if self.config_service.actualizar_config_empresa(nueva_config):
-                self.mostrar_popup_mensaje("✅ Configuración guardada exitosamente")
-                print("🎉 Configuración guardada en archivo")
+                self.mostrar_info("✅ Configuración guardada exitosamente")
+                print("🎉 Configuración guardada correctamente")
             else:
                 self.mostrar_error("Error guardando configuración")
                 
         except Exception as e:
             error_msg = f"Error: {str(e)}"
             print(f"❌ {error_msg}")
+            import traceback
+            traceback.print_exc()
             self.mostrar_error(error_msg)
     
-    def ir_a_menu(self, instance):
-        """Ir al menú principal"""
-        self.manager.current = "menu"
+    def cancelar(self):
+        """Cancelar y volver al menú"""
+        self.ir_a_menu()
     
-    def mostrar_popup_mensaje(self, mensaje):
-        """Mostrar mensaje en popup"""
-        content = BoxLayout(orientation='vertical', spacing=10, padding=20)
-        content.add_widget(Label(
+    def mostrar_info(self, mensaje):
+        """Mostrar mensaje informativo"""
+        if self.dialog:
+            self.dialog.dismiss()
+        
+        self.dialog = MDDialog(
             text=mensaje,
-            font_size='16sp',
-            halign='center'
-        ))
-        
-        btn_ok = Button(
-            text='OK',
-            size_hint_y=None,
-            height=40,
-            background_color=(0.2, 0.6, 1, 1)
+            buttons=[
+                MDRaisedButton(
+                    text="OK",
+                    md_bg_color=ds_color('primary'),
+                    on_release=lambda x: self.dialog.dismiss()
+                )
+            ]
         )
-        
-        content.add_widget(btn_ok)
-        
-        popup = Popup(
-            title='Configuración',
-            content=content,
-            size_hint=(0.6, 0.3)
-        )
-        
-        btn_ok.bind(on_press=popup.dismiss)
-        popup.open()
+        self.dialog.open()
     
     def mostrar_error(self, mensaje):
         """Mostrar mensaje de error"""
-        self.mostrar_popup_mensaje(f"❌ {mensaje}")
+        if self.dialog:
+            self.dialog.dismiss()
+        
+        self.dialog = MDDialog(
+            title="Error",
+            text=mensaje,
+            buttons=[
+                MDRaisedButton(
+                    text="OK",
+                    md_bg_color=ds_color('error'),
+                    on_release=lambda x: self.dialog.dismiss()
+                )
+            ]
+        )
+        self.dialog.open()

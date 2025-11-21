@@ -1,26 +1,22 @@
-# views/caja/caja_screen.kv - DISEÑO PROFESIONAL
+# views/caja/caja_screen.kv - LÍNEA 255 CORREGIDA
 <CajaScreen>:
     name: "caja"
     
-    MDBoxLayout:
+    ResponsiveBoxLayout:
         orientation: "vertical"
-        spacing: 0
-        padding: 0
+        responsive_spacing: "none"
+        responsive_padding: "none"
 
         # ========== TOP BAR ==========
         MDTopAppBar:
             title: "💰 Módulo de Caja"
             md_bg_color: ds_color('primary')
             elevation: 2
-            left_action_items: [["arrow-left", lambda x: app.cambiar_pantalla("menu")]]
-            right_action_items: 
-                [
-                    ["history", lambda x: root.ver_historial_cierres()],
-                    ["refresh", lambda x: root.forzar_actualizacion()]
-                ]
+            left_action_items: [["arrow-left", root.ir_a_menu]]
+            right_action_items: [["history", root.ver_historial_cierres], ["refresh", root.forzar_actualizacion]]
 
         # ========== ESTADO CAJA Y CONTROLES ==========
-        MDCard:
+        ResponsiveCard:
             orientation: "horizontal"
             size_hint_y: None
             height: dp(80)
@@ -30,7 +26,7 @@
             md_bg_color: ds_color('light')
 
             # Estado actual
-            MDBoxLayout:
+            ResponsiveBoxLayout:
                 orientation: "vertical"
                 size_hint_x: 0.4
                 spacing: dp(4)
@@ -51,12 +47,12 @@
                     size_hint_y: 0.6
 
             # Botones control
-            MDBoxLayout:
+            ResponsiveBoxLayout:
                 orientation: "horizontal"
                 size_hint_x: 0.6
-                spacing: ds_spacing('xs')
+                responsive_spacing: "xs"
 
-                MDRaisedButton:
+                ResponsiveMDRaisedButton:
                     id: btn_abrir_caja
                     text: "ABRIR CAJA"
                     icon: "lock-open"
@@ -64,7 +60,7 @@
                     md_bg_color: ds_color('success')
                     on_release: root.abrir_caja()
 
-                MDRaisedButton:
+                ResponsiveMDRaisedButton:
                     id: btn_cerrar_caja
                     text: "CERRAR CAJA"
                     icon: "lock"
@@ -72,7 +68,7 @@
                     md_bg_color: ds_color('error')
                     on_release: root.cerrar_caja()
 
-                MDRaisedButton:
+                ResponsiveMDRaisedButton:
                     text: "ARQUEO"
                     icon: "cash-multiple"
                     disabled: not root.caja_abierta
@@ -80,7 +76,7 @@
                     on_release: root.realizar_arqueo()
 
         # ========== ESTADÍSTICAS DEL DÍA ==========
-        MDCard:
+        ResponsiveCard:
             orientation: "vertical"
             size_hint_y: None
             height: dp(100)
@@ -96,7 +92,7 @@
                 size_hint_y: None
                 height: dp(25)
 
-            MDGridLayout:
+            ResponsiveGridLayout:
                 cols: 4
                 spacing: ds_spacing('sm')
                 size_hint_y: None
@@ -131,18 +127,24 @@
                     color_fondo: ds_color('secondary', 0.1)
 
         # ========== SECCIÓN PEDIDOS PENDIENTES ==========
-        MDBoxLayout:
+        ResponsiveBoxLayout:
             orientation: "vertical"
             spacing: dp(8)
 
             # Header con tabs
-            MDBoxLayout:
+            ResponsiveBoxLayout:
                 orientation: "horizontal"
                 size_hint_y: None
                 height: dp(48)
                 padding: [ds_spacing('md'), 0]
-                spacing: ds_spacing('sm')
-                md_bg_color: ds_color('light')
+                responsive_spacing: "sm"
+                
+                canvas.before:
+                    Color:
+                        rgba: ds_color('light')
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
 
                 MDLabel:
                     text: "PEDIDOS LISTOS PARA PAGAR"
@@ -150,13 +152,13 @@
                     bold: True
                     size_hint_x: 0.6
 
-                MDChip:
+                ResponsiveChip:
                     id: chip_todos_pedidos
                     text: "TODOS"
                     selected: True
                     on_press: root.filtrar_pedidos('todos')
 
-                MDChip:
+                ResponsiveChip:
                     id: chip_listos
                     text: "LISTOS"
                     on_press: root.filtrar_pedidos('listo')
@@ -170,34 +172,27 @@
                     halign: "right"
 
             # Grid de pedidos
-            ScrollView:
+            ResponsiveScrollView:
                 do_scroll_x: False
                 bar_width: dp(4)
                 bar_color: ds_color('primary', 0.3)
 
-                MDGridLayout:
+                ResponsiveGridLayout:
                     id: contenedor_pedidos
-                    cols: 2 if not ds_is_mobile() else 1
+                    default_cols: 2
                     spacing: ds_spacing('md')
                     padding: ds_spacing('md')
                     size_hint_y: None
                     height: self.minimum_height
-                    adaptive_size: True
 
 
 # ========== WIDGET: TARJETA ESTADÍSTICA ==========
-<EstadisticaCard@MDCard>:
+<EstadisticaCard>:
     orientation: "vertical"
     padding: ds_spacing('sm')
     spacing: dp(4)
     elevation: 0
     radius: dp(8)
-    
-    titulo: ""
-    valor: ""
-    icono: ""
-    color_fondo: (1, 1, 1, 1)
-    
     md_bg_color: root.color_fondo
     
     MDLabel:
@@ -221,7 +216,7 @@
 
 
 # ========== WIDGET: CARD DE PEDIDO PARA PAGO ==========
-<PedidoPagoCard@MDCard>:
+<PedidoPagoCard>:
     orientation: "vertical"
     size_hint_y: None
     height: dp(200)
@@ -229,26 +224,24 @@
     spacing: 0
     elevation: 2
     radius: dp(12)
-    
-    pedido_id: 0
-    mesa: ""
-    total: 0.0
-    num_items: 0
-    mesero: ""
-    tiempo: ""
-    
     md_bg_color: ds_color('white')
     
     # Header
-    MDBoxLayout:
+    ResponsiveBoxLayout:
         orientation: "horizontal"
         size_hint_y: None
         height: dp(60)
-        padding: ds_spacing('sm')
-        spacing: ds_spacing('sm')
-        md_bg_color: ds_color('primary', 0.1)
+        responsive_padding: "sm"
+        responsive_spacing: "sm"
         
-        MDBoxLayout:
+        canvas.before:
+            Color:
+                rgba: ds_color('primary', 0.1)
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        
+        ResponsiveBoxLayout:
             orientation: "vertical"
             size_hint_x: 0.6
             
@@ -259,8 +252,9 @@
                 theme_text_color: "Primary"
                 size_hint_y: 0.6
             
+            # ✅ LÍNEA 255 CORREGIDA - INDENTACIÓN
             MDLabel:
-                text: f"Mesa {root.mesa} • {root.num_items} items"
+                text: f"Mesa {root.mesa} - {root.num_items} items"
                 font_style: "Caption"
                 theme_text_color: "Secondary"
                 size_hint_y: 0.4
@@ -274,11 +268,11 @@
             theme_text_color: "Custom"
             text_color: ds_color('success')
     
-    MDSeparator:
+    ResponsiveSeparator:
         height: dp(1)
     
     # Info mesero y tiempo
-    MDBoxLayout:
+    ResponsiveBoxLayout:
         orientation: "horizontal"
         size_hint_y: None
         height: dp(30)
@@ -297,40 +291,40 @@
             size_hint_x: 0.4
             halign: "right"
     
-    MDSeparator:
+    ResponsiveSeparator:
         height: dp(1)
     
     # Botones de pago
-    MDBoxLayout:
+    ResponsiveBoxLayout:
         orientation: "horizontal"
         size_hint_y: None
         height: dp(90)
         spacing: dp(4)
         padding: ds_spacing('sm')
         
-        MDBoxLayout:
+        ResponsiveBoxLayout:
             orientation: "vertical"
             spacing: dp(4)
             
-            MDRaisedButton:
+            ResponsiveMDRaisedButton:
                 text: "EFECTIVO"
                 icon: "cash"
                 md_bg_color: ds_color('success')
                 size_hint_y: 0.5
                 on_release: root.pagar_efectivo()
             
-            MDRaisedButton:
+            ResponsiveMDRaisedButton:
                 text: "TARJETA"
                 icon: "credit-card"
                 md_bg_color: ds_color('info')
                 size_hint_y: 0.5
                 on_release: root.pagar_tarjeta()
         
-        MDBoxLayout:
+        ResponsiveBoxLayout:
             orientation: "vertical"
             spacing: dp(4)
             
-            MDRaisedButton:
+            ResponsiveMDRaisedButton:
                 text: "TRANSFER"
                 icon: "bank-transfer"
                 md_bg_color: ds_color('secondary')
@@ -345,7 +339,7 @@
 
 
 # ========== ESTADO VACÍO ==========
-<CajaEmptyState@MDBoxLayout>:
+<CajaEmptyState>:
     orientation: "vertical"
     padding: dp(40)
     spacing: dp(20)

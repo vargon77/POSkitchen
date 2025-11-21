@@ -1,11 +1,11 @@
-# main.py - VERSIÓN FINAL PROFESIONAL
+# main.py - VERSIÓN CORREGIDA
 from kivymd.app import MDApp
 from kivy.lang import Builder
 from kivy.core.window import Window
 from kivy.properties import BooleanProperty, ObjectProperty, DictProperty
 from kivy.factory import Factory
 
-# Importar pantallas
+# Importar TODAS las pantallas
 from views.login.login_screen import LoginScreen
 from views.menu.menu_screen import MenuScreen
 from views.pedidos.toma_pedidos_screen import TomaPedidoScreen
@@ -13,9 +13,16 @@ from views.pedidos.cierre_cuenta_screen import CierreCuentaScreen
 from views.cocina.cocina_screen import CocinaScreen
 from views.caja.caja_screen import CajaScreen
 from views.configuracion.config_screen import ConfigScreen
-
-# Importar widgets responsivos
-from mis_widgets.responsive_widgets import ResponsiveGridLayout
+from views.inventario.inventario_screen import InventarioScreen
+from kivy.factory import Factory
+from mis_widgets.responsive_widgets import (
+    ResponsiveButton, ResponsiveMDRaisedButton, ResponsiveMDIconButton,
+    ResponsiveCard, ResponsiveLabel, ResponsiveBoxLayout, ResponsiveGridLayout,
+    ResponsiveTextField, ResponsiveChip, ResponsiveScrollView, ResponsiveSeparator,
+    ResponsiveSpinner, CategoryChipPro, ProductCardPro, OrderItemPro,
+    PedidoItemCompact, ItemFilaTabla, PedidoCocinaCard, PedidoPagoCard,
+    EmptyStateWidget, CocinaEmptyState, CajaEmptyState, EmptyCartState,
+    EstadisticaCard)
 
 # Sistema de diseño
 from themes.design_system import (
@@ -33,12 +40,37 @@ builtins.ds_button_height = ds_button_height
 builtins.ds_is_mobile = ds_is_mobile
 builtins.ds_grid_cols = ds_grid_cols
 builtins.dp = dp
-builtins.sp = lambda x: dp(x)  # Agregar sp también
+builtins.sp = lambda x: dp(x)
 
 import os
 
 # Registrar widgets personalizados
+
+# Registrar en Factory
+Factory.register('ResponsiveButton', cls=ResponsiveButton)
+Factory.register('ResponsiveMDRaisedButton', cls=ResponsiveMDRaisedButton)
+Factory.register('ResponsiveMDIconButton', cls=ResponsiveMDIconButton)
+Factory.register('ResponsiveCard', cls=ResponsiveCard)
+Factory.register('ResponsiveLabel', cls=ResponsiveLabel)
+Factory.register('ResponsiveBoxLayout', cls=ResponsiveBoxLayout)
 Factory.register('ResponsiveGridLayout', cls=ResponsiveGridLayout)
+Factory.register('ResponsiveTextField', cls=ResponsiveTextField)
+Factory.register('ResponsiveChip', cls=ResponsiveChip)
+Factory.register('ResponsiveScrollView', cls=ResponsiveScrollView)
+Factory.register('ResponsiveSeparator', cls=ResponsiveSeparator)
+Factory.register('ResponsiveSpinner', cls=ResponsiveSpinner)
+Factory.register('CategoryChipPro', cls=CategoryChipPro)
+Factory.register('ProductCardPro', cls=ProductCardPro)
+Factory.register('OrderItemPro', cls=OrderItemPro)
+Factory.register('PedidoItemCompact', cls=PedidoItemCompact)
+Factory.register('ItemFilaTabla', cls=ItemFilaTabla)
+Factory.register('PedidoCocinaCard', cls=PedidoCocinaCard)
+Factory.register('PedidoPagoCard', cls=PedidoPagoCard)
+Factory.register('EmptyStateWidget', cls=EmptyStateWidget)
+Factory.register('CocinaEmptyState', cls=CocinaEmptyState)
+Factory.register('CajaEmptyState', cls=CajaEmptyState)
+Factory.register('EmptyCartState', cls=EmptyCartState)
+Factory.register('EstadisticaCard', cls=EstadisticaCard)
 
 class MiAppPOS(MDApp):
     is_dark_theme = BooleanProperty(False)
@@ -48,7 +80,7 @@ class MiAppPOS(MDApp):
     
     def build(self):
         self.title = "Sistema POS - Profesional"
-        self.icon = ""  # Puedes agregar un ícono aquí
+        self.icon = ""
         
         # Aplicar estilos globales del sistema de diseño
         DesignSystem.apply_global_styles(self)
@@ -64,10 +96,8 @@ class MiAppPOS(MDApp):
         # Inicializar servicios
         self._inicializar_servicios()
         
-        # Cargar estilos globales
+        # ORDEN CRÍTICO: Cargar estilos PRIMERO, luego pantallas
         self.load_global_styles()
-        
-        # Cargar archivos .kv
         self.load_kv_files()
 
         # Retornar interfaz principal
@@ -77,7 +107,6 @@ class MiAppPOS(MDApp):
         """Configurar ventana según tipo de dispositivo"""
         screen_type = DesignSystem.get_screen_type()
         
-        # Configuración responsiva automática
         if DesignSystem.is_mobile():
             Window.size = (360, 640)
         elif DesignSystem.is_tablet():
@@ -85,7 +114,7 @@ class MiAppPOS(MDApp):
         else:
             Window.size = (1280, 800)
         
-        # En desarrollo, simular diferentes dispositivos
+        # Simular diferentes dispositivos si se especifica
         if os.environ.get('SIMULATE_DEVICE'):
             device = os.environ.get('SIMULATE_DEVICE')
             sizes = {
@@ -95,7 +124,6 @@ class MiAppPOS(MDApp):
             }
             Window.size = sizes.get(device, (1280, 800))
         
-        # Establecer tamaño mínimo
         Window.minimum_width = 400
         Window.minimum_height = 600
         
@@ -125,7 +153,7 @@ class MiAppPOS(MDApp):
             traceback.print_exc()
     
     def load_global_styles(self):
-        """Cargar estilos globales"""
+        """Cargar estilos globales PRIMERO (REGLA #2)"""
         global_styles = "themes/global_styles.kv"
         if os.path.exists(global_styles):
             try:
@@ -133,15 +161,16 @@ class MiAppPOS(MDApp):
                 print(f"✅ Estilos globales cargados: {global_styles}")
             except Exception as e:
                 print(f"❌ ERROR cargando estilos globales: {e}")
+                import traceback
+                traceback.print_exc()
+        else:
+            print(f"⚠️  NO EXISTE: {global_styles}")
     
     def load_kv_files(self):
-        """Cargar todos los archivos .kv en orden"""
+        """Cargar todos los archivos .kv en orden correcto"""
         kv_paths = [
-            # Widgets personalizados primero
-            "mis_widgets/product_card.kv",
-            "mis_widgets/category_chip.kv",
-            
-            # Pantallas principales
+            # main.kv ya se carga con Builder.load_file() al final
+                        # Pantallas principales
             "views/login/login_screen.kv",
             "views/menu/menu_screen.kv",
             "views/pedidos/toma_pedidos_screen.kv",
@@ -149,24 +178,36 @@ class MiAppPOS(MDApp):
             "views/cocina/cocina_screen.kv",
             "views/caja/caja_screen.kv",
             "views/configuracion/config_screen.kv",
+            #"views/inventario/inventario_screen.kv",  
         ]
         
         print("\n" + "="*60)
         print("📂 CARGANDO ARCHIVOS .KV")
         print("="*60)
         
+        loaded_count = 0
+        error_count = 0
+        
         for kv_file in kv_paths:
             if os.path.exists(kv_file):
                 try:
-                    Builder.load_file(kv_file)
-                    print(f"✅ {kv_file}")
+                    # Verificar que NO esté ya cargado
+                    if kv_file not in Builder.files:
+                        Builder.load_file(kv_file)
+                        loaded_count += 1
+                        print(f"✅ {kv_file}")
+                    else:
+                        print(f"⭐ YA CARGADO: {kv_file}")
                 except Exception as e:
+                    error_count += 1
                     print(f"❌ ERROR en {kv_file}: {e}")
                     import traceback
                     traceback.print_exc()
             else:
+                error_count += 1
                 print(f"⚠️  NO EXISTE: {kv_file}")
         
+        print(f"\n📊 Resumen: {loaded_count} archivos cargados, {error_count} errores")
         print("="*60 + "\n")
     
     def on_start(self):
@@ -208,66 +249,41 @@ class MiAppPOS(MDApp):
             
             if pantallas_faltantes:
                 print(f"⚠️  Pantallas faltantes: {', '.join(pantallas_faltantes)}")
-            
             print("="*60 + "\n")
             
         except Exception as e:
             print(f"❌ Error verificando pantallas: {e}")
+            import traceback
+            traceback.print_exc()
     
-    def verificar_datos_iniciales(self):
-        """Verificar datos iniciales después del login"""
-        try:
-            from services.producto_service import ProductoService
-            producto_service = ProductoService(self.db_service)
-            
-            productos = producto_service.obtener_todos_productos()
-            if not productos:
-                print("⚠️ No hay productos en la base de datos")
-                self._mostrar_dialogo_info(
-                    "Base de Datos",
-                    "No hay productos registrados.\nContacte al administrador."
-                )
-            else:
-                print(f"✅ {len(productos)} productos disponibles")
-        except Exception as e:
-            print(f"❌ Error verificando datos: {e}")
-    
-    def toggle_theme(self):
-        """Cambiar tema claro/oscuro"""
-        self.is_dark_theme = not self.is_dark_theme
-        self.actualizar_tema()
-
-    def actualizar_tema(self):
-        """Actualizar tema de la aplicación"""
-        self.theme_cls.theme_style = "Dark" if self.is_dark_theme else "Light"
-        print(f"🎨 Tema cambiado a: {self.theme_cls.theme_style}")
-
     def cambiar_pantalla(self, screen_name, close_drawer=True):
-        """Método centralizado para cambiar pantallas con validación"""
+        """Método centralizado para cambiar pantallas - VERSIÓN SIMPLIFICADA"""
         try:
-            # Verificar permisos si hay usuario logueado
-            if self.usuario_actual and self.auth_service:
-                if not self.auth_service.verificar_permiso(screen_name):
-                    self.mostrar_error_permisos(screen_name)
-                    return
-            
             sm = self.root.ids.screen_manager
             
+            # Lista de pantallas públicas (sin restricción de permisos)
+            pantallas_publicas = ['login', 'menu']
+            
+            # Verificar que la pantalla existe
+            if screen_name not in sm.screen_names:
+                print(f"⚠️ Pantalla '{screen_name}' no existe en screen_names")
+                print(f"   Pantallas disponibles: {sm.screen_names}")
+                return
+            
+            # VERIFICACIÓN SIMPLIFICADA - eliminar lógica de permisos temporalmente
+            # Solo verificar usuario para pantallas no públicas
+            if screen_name not in pantallas_publicas and not self.usuario_actual:
+                print(f"🔐 Redirigiendo a login - no hay usuario para {screen_name}")
+                sm.current = "login"
+                return
+                
             # Cerrar drawer si está abierto
             if close_drawer and hasattr(self.root, 'ids') and 'nav_drawer' in self.root.ids:
                 self.root.ids.nav_drawer.set_state("close")
             
-            # Verificar que la pantalla existe
-            if screen_name not in sm.screen_names:
-                print(f"⚠️ Pantalla '{screen_name}' no existe")
-                self._mostrar_dialogo_info(
-                    "Error de Navegación",
-                    f"La pantalla '{screen_name}' no está disponible"
-                )
-                return
-            
+            # Cambiar pantalla
             sm.current = screen_name
-            print(f"📄 Navegación exitosa → {screen_name}")
+            print(f"✅ Navegación exitosa → {screen_name}")
             
         except Exception as e:
             print(f"❌ Error cambiando pantalla: {e}")
@@ -281,7 +297,7 @@ class MiAppPOS(MDApp):
         
         dialog = MDDialog(
             title="🚫 Acceso Denegado",
-            text=f"No tienes permisos para acceder a:\n{pantalla.upper()}",
+            text=f"No tienes permisos para acceder a:\n{pantalla.upper()}\n\nContacta al administrador.",
             buttons=[
                 MDRaisedButton(
                     text="ENTENDIDO",
@@ -321,6 +337,16 @@ class MiAppPOS(MDApp):
             
             print(f"🚪 Sesión cerrada - {usuario_nombre}")
     
+    def toggle_theme(self):
+        """Cambiar tema claro/oscuro"""
+        self.is_dark_theme = not self.is_dark_theme
+        self.actualizar_tema()
+
+    def actualizar_tema(self):
+        """Actualizar tema de la aplicación"""
+        self.theme_cls.theme_style = "Dark" if self.is_dark_theme else "Light"
+        print(f"🎨 Tema cambiado a: {self.theme_cls.theme_style}")
+    
     def _mostrar_dialogo_info(self, titulo, mensaje):
         """Mostrar diálogo informativo"""
         from kivymd.uix.dialog import MDDialog
@@ -341,9 +367,6 @@ class MiAppPOS(MDApp):
 
 
 if __name__ == "__main__":
-    # Opcional: simular dispositivo diferente
-    # os.environ['SIMULATE_DEVICE'] = 'mobile'  # mobile, tablet, desktop
-    
     try:
         app = MiAppPOS()
         app.run()

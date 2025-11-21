@@ -1,28 +1,37 @@
-# mis_widgets/responsive_widgets.py
+# mis_widgets/responsive_widgets.py - VERSIÓN COMPLETA FASE 3
 """
 Widgets personalizados responsivos para POS
 Compatible con Kivy 2.3.0 y KivyMD 1.2.0
+TODOS los widgets necesarios para el proyecto
 """
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.textinput import TextInput
 from kivymd.uix.gridlayout import MDGridLayout
+from kivymd.uix.card import MDCard
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.label import MDLabel
+from kivymd.uix.button import MDRaisedButton, MDFlatButton, MDIconButton
+from kivymd.uix.chip import MDChip
+from kivymd.uix.textfield import MDTextField
 from kivy.uix.scrollview import ScrollView
-from kivy.properties import StringProperty, NumericProperty, ListProperty, BooleanProperty
-from kivy.graphics import Color, RoundedRectangle
+from kivy.uix.spinner import Spinner
+from kivy.properties import (StringProperty, NumericProperty, ListProperty, 
+                            BooleanProperty, ObjectProperty, DictProperty)
+from kivy.graphics import Color, RoundedRectangle, Rectangle, Line
 from kivy.core.window import Window
-from kivy.metrics import dp
-from kivy.graphics import Rectangle
+from kivy.metrics import dp, sp
 
 from themes.design_system import (DesignSystem,
     ds_color, ds_spacing, ds_font, ds_button_height, ds_grid_cols, ds_is_mobile
 )
 
 
-# ==================== BOTONES ====================
+# ==================== BOTONES RESPONSIVOS ====================
 
 class ResponsiveButton(Button):
-    """Botón adaptativo usando DesignSystem unificado"""
+    """Botón adaptativo base"""
     
     button_style = StringProperty('primary')
     button_size = StringProperty('md')
@@ -40,14 +49,12 @@ class ResponsiveButton(Button):
         self.height = ds_button_height(self.button_size)
         self.size_hint_y = None
         
-        # Tamaño de fuente responsivo
         size_map = {'sm': 'sm', 'md': 'base', 'lg': 'lg'}
         self.font_size = ds_font(size_map.get(self.button_size, 'base'))
         
-        # Colores según estilo
         color_map = {
             'primary': 'primary', 'success': 'success', 'error': 'error',
-            'warning': 'warning', 'secondary': 'secondary',
+            'warning': 'warning', 'secondary': 'secondary', 'info': 'info'
         }
         
         self.background_color = ds_color(color_map.get(self.button_style, 'primary'))
@@ -55,123 +62,104 @@ class ResponsiveButton(Button):
         self.bold = True
 
 
-
-class ResponsiveIconButton(ResponsiveButton):
-    """Botón con icono (emoji o texto)"""
+class ResponsiveMDRaisedButton(MDRaisedButton):
+    """MDRaisedButton responsivo"""
     
-    icon = StringProperty('')
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        if self.icon:
-            self.text = f"{self.icon} {self.text}" if self.text else self.icon
-
-
-# ==================== TARJETAS ====================
-
-class ResponsiveCard(BoxLayout):
-    """Tarjeta responsiva usando DesignSystem unificado"""
-    
-    elevation = NumericProperty(2)
-    border_radius = NumericProperty(8)
-    bg_color = ListProperty([1, 1, 1, 1])
+    button_size = StringProperty('md')
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.orientation = 'vertical'
+        self._apply_styles()
+        Window.bind(on_resize=self._on_window_resize)
+    
+    def _on_window_resize(self, instance, width, height):
+        self._apply_styles()
+    
+    def _apply_styles(self):
+        self.size_hint_y = None
+        self.height = ds_button_height(self.button_size)
+
+
+class ResponsiveMDIconButton(MDIconButton):
+    """MDIconButton responsivo"""
+    pass
+
+
+# ==================== CARDS RESPONSIVOS ====================
+
+class ResponsiveCard(MDCard):
+    """Card responsivo base"""
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._apply_responsive_styles()
-        self._update_canvas()
         Window.bind(on_resize=self._on_window_resize)
     
     def _on_window_resize(self, instance, width, height):
         self._apply_responsive_styles()
     
     def _apply_responsive_styles(self):
-        """Aplicar estilos usando DesignSystem unificado"""
-        from themes.design_system import DesignSystem
         padding = DesignSystem.get_card_padding()
         self.padding = padding
         self.spacing = ds_spacing('sm')
-    
-    def _update_canvas(self):
-        with self.canvas.before:
-            Color(*self.bg_color)
-            self.rect = RoundedRectangle(
-                pos=self.pos,
-                size=self.size,
-                radius=[dp(self.border_radius)]
-            )
-        
-        self.bind(pos=self._update_rect, size=self._update_rect)
-    
-    def _update_rect(self, *args):
-        self.rect.pos = self.pos
-        self.rect.size = self.size
 
 
-class ProductCard(ResponsiveCard):
-    """Tarjeta de producto optimizada"""
+# ==================== LABELS RESPONSIVOS ====================
+
+class ResponsiveLabel(MDLabel):
+    """Label responsivo con estilos"""
     
-    producto_nombre = StringProperty('')
-    producto_precio = NumericProperty(0.0)
-    producto_stock = NumericProperty(0)
-    on_select = None
+    label_style = StringProperty('body')
     
     def __init__(self, **kwargs):
-        # Extraer callback antes de super
-        self.on_select = kwargs.pop('on_select', None)
         super().__init__(**kwargs)
-        self._build_ui()
+        self._apply_style()
+        Window.bind(on_resize=self._on_window_resize)
     
-    def _build_ui(self):
-        """Construir UI de la tarjeta"""
-        self.clear_widgets()
-        
-        # Nombre del producto
-        lbl_nombre = Label(
-            text=self.producto_nombre,
-            font_size=ds_font('md'),
-            bold=True,
-            size_hint_y=0.5,
-            halign='center',
-            valign='middle'
-        )
-        lbl_nombre.bind(size=lbl_nombre.setter('text_size'))
-        self.add_widget(lbl_nombre)
-        
-        # Precio
-        lbl_precio = Label(
-            text=f"${self.producto_precio:.2f}",
-            font_size=ds_font('lg'),
-            color=ds_color('primary'),
-            bold=True,
-            size_hint_y=0.3,
-            halign='center'
-        )
-        self.add_widget(lbl_precio)
-        
-        # Stock (si aplica)
-        if self.producto_stock > 0:
-            lbl_stock = Label(
-                text=f"Stock: {self.producto_stock}",
-                font_size=ds_font('sm'),
-                color=ds_color('gray'),
-                size_hint_y=0.2
-            )
-            self.add_widget(lbl_stock)
+    def _on_window_resize(self, instance, width, height):
+        self._apply_style()
     
-    def on_touch_down(self, touch):
-        """Manejar toque/click"""
-        if self.collide_point(*touch.pos):
-            if self.on_select:
-                self.on_select(self)
-            return True
-        return super().on_touch_down(touch)
+    def _apply_style(self):
+        style_map = {
+            'title': 'xl',
+            'subtitle': 'lg', 
+            'body': 'base',
+            'caption': 'sm'
+        }
+        
+        self.font_size = ds_font(style_map.get(self.label_style, 'base'))
+        
+        if self.label_style == 'title':
+            self.bold = True
 
 
-# ==================== LAYOUTS ====================
+# ==================== BOXLAYOUTS RESPONSIVOS ====================
+
+class ResponsiveBoxLayout(MDBoxLayout):
+    """BoxLayout responsivo"""
+    
+    responsive_spacing = StringProperty('md')
+    responsive_padding = StringProperty('md')
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._apply_responsive_styles()
+        Window.bind(on_resize=self._on_window_resize)
+    
+    def _on_window_resize(self, instance, width, height):
+        self._apply_responsive_styles()
+    
+    def _apply_responsive_styles(self):
+        if self.responsive_spacing:
+            self.spacing = ds_spacing(self.responsive_spacing)
+        if self.responsive_padding:
+            self.padding = ds_spacing(self.responsive_padding)
+
+
+# ==================== GRIDS RESPONSIVOS ====================
+
 class ResponsiveGridLayout(MDGridLayout):
-    """GridLayout responsivo usando DesignSystem unificado"""
+    """GridLayout responsivo"""
     
     default_cols = NumericProperty(2)
     
@@ -187,15 +175,84 @@ class ResponsiveGridLayout(MDGridLayout):
         self.cols = ds_grid_cols(self.default_cols)
 
 
-class ResponsiveScrollView(ScrollView):
-    """ScrollView con configuración optimizada"""
+# ==================== TEXTFIELDS RESPONSIVOS ====================
+
+class ResponsiveTextField(MDTextField):
+    """TextField responsivo"""
+    
+    field_size = StringProperty('md')
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # Optimizar para móvil
+        self._apply_styles()
+        Window.bind(on_resize=self._on_window_resize)
+    
+    def _on_window_resize(self, instance, width, height):
+        self._apply_styles()
+    
+    def _apply_styles(self):
+        if self.field_size == 'sm':
+            self.height = dp(40)
+        elif self.field_size == 'lg':
+            self.height = dp(56)
+        else:
+            self.height = dp(48)
+        
+        self.size_hint_y = None
+
+
+# ==================== CHIPS RESPONSIVOS ====================
+
+class ResponsiveChip(MDChip):
+    """Chip responsivo"""
+    
+    selected = BooleanProperty(False)
+    categoria = StringProperty("")
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.size_hint = (None, None)
+        self._apply_styles()
+        self.bind(selected=self._update_colors)
+        Window.bind(on_resize=self._on_window_resize)
+    
+    def _on_window_resize(self, instance, width, height):
+        self._apply_styles()
+    
+    def _apply_styles(self):
+        if ds_is_mobile():
+            self.height = dp(32)
+            self.font_size = ds_font('sm')
+        else:
+            self.height = dp(36)
+            self.font_size = ds_font('base')
+        
+        # Ancho mínimo
+        self.width = dp(80)
+    
+    def _update_colors(self, *args):
+        if self.selected:
+            self.md_bg_color = ds_color('primary')
+            self.text_color = ds_color('white')
+        else:
+            self.md_bg_color = ds_color('gray_light')
+            self.text_color = ds_color('dark')
+    
+    def on_text(self, instance, value):
+        """Ajustar ancho al texto"""
+        estimated_width = len(value) * 7 + ds_spacing('lg')
+        self.width = max(dp(80), dp(estimated_width))
+
+
+# ==================== SCROLLVIEWS RESPONSIVOS ====================
+
+class ResponsiveScrollView(ScrollView):
+    """ScrollView optimizado"""
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         if DesignSystem.is_mobile():
             self.bar_width = dp(6)
-            self.scroll_type = ['bars', 'content']
         else:
             self.bar_width = dp(8)
         
@@ -203,199 +260,12 @@ class ResponsiveScrollView(ScrollView):
         self.always_overscroll = False
 
 
-# ==================== ITEMS DE LISTA ====================
-
-class PedidoItemCard(ResponsiveCard):
-    """Item de pedido en lista"""
-    
-    item_nombre = StringProperty('')
-    item_cantidad = NumericProperty(1)
-    item_precio = NumericProperty(0.0)
-    item_subtotal = NumericProperty(0.0)
-    
-    on_increase = None
-    on_decrease = None
-    on_delete = None
-    
-    def __init__(self, **kwargs):
-        # Extraer callbacks
-        self.on_increase = kwargs.pop('on_increase', None)
-        self.on_decrease = kwargs.pop('on_decrease', None)
-        self.on_delete = kwargs.pop('on_delete', None)
-        
-        super().__init__(**kwargs)
-        self.size_hint_y = None
-        
-        # Altura adaptativa
-        if DesignSystem.is_mobile():
-            self.height = dp(60)
-        else:
-            self.height = dp(70)
-        
-        self._build_ui()
-    
-    def _build_ui(self):
-        """Construir UI del item"""
-        self.clear_widgets()
-        
-        layout = BoxLayout(orientation='horizontal', spacing=ds_spacing('sm'))
-        
-        # Nombre (50%)
-        lbl_nombre = Label(
-            text=self.item_nombre,
-            size_hint_x=0.4,
-            font_size=ds_font('base'),
-            text_size=(None, None),
-            halign='left',
-            valign='middle'
-        )
-        layout.add_widget(lbl_nombre)
-        
-        # Controles de cantidad
-        if self.on_decrease or self.on_increase:
-            # Botón -
-            btn_menos = Button(
-                text='-',
-                size_hint_x=0.1,
-                background_color=ds_color('error'),
-                background_normal='',
-                font_size=ds_font('lg'),
-                bold=True
-            )
-            if self.on_decrease:
-                btn_menos.bind(on_press=lambda x: self.on_decrease(self))
-            layout.add_widget(btn_menos)
-            
-            # Cantidad
-            lbl_cant = Label(
-                text=str(self.item_cantidad),
-                size_hint_x=0.1,
-                font_size=ds_font('lg'),
-                bold=True
-            )
-            layout.add_widget(lbl_cant)
-            
-            # Botón +
-            btn_mas = Button(
-                text='+',
-                size_hint_x=0.1,
-                background_color=ds_color('success'),
-                background_normal='',
-                font_size=ds_font('lg'),
-                bold=True
-            )
-            if self.on_increase:
-                btn_mas.bind(on_press=lambda x: self.on_increase(self))
-            layout.add_widget(btn_mas)
-        else:
-            # Solo mostrar cantidad
-            lbl_cant = Label(
-                text=f"x{self.item_cantidad}",
-                size_hint_x=0.2,
-                font_size=ds_font('base'),
-                bold=True
-            )
-            layout.add_widget(lbl_cant)
-        
-        # Subtotal
-        lbl_subtotal = Label(
-            text=f"${self.item_subtotal:.2f}",
-            size_hint_x=0.3,
-            font_size=ds_font('md'),
-            bold=True,
-            halign='right',
-            color=ds_color('primary')
-        )
-        layout.add_widget(lbl_subtotal)
-        
-        self.add_widget(layout)
-
-
-# ==================== ENCABEZADOS ====================
-
-class SectionHeader(BoxLayout):
-    """Encabezado de sección"""
-    
-    title = StringProperty('')
-    subtitle = StringProperty('')
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.orientation = 'vertical'
-        self.size_hint_y = None
-        self.height = dp(60) if self.subtitle else dp(40)
-        self.padding = ds_spacing('sm')
-        
-        self._build_ui()
-    
-    def _build_ui(self):
-        """Construir encabezado"""
-        lbl_title = Label(
-            text=self.title,
-            font_size=ds_font('xl'),
-            bold=True,
-            halign='left',
-            size_hint_y=None,
-            height=dp(30)
-        )
-        lbl_title.bind(size=lbl_title.setter('text_size'))
-        self.add_widget(lbl_title)
-        
-        if self.subtitle:
-            lbl_subtitle = Label(
-                text=self.subtitle,
-                font_size=ds_font('sm'),
-                color=ds_color('gray'),
-                halign='left',
-                size_hint_y=None,
-                height=dp(20)
-            )
-            lbl_subtitle.bind(size=lbl_subtitle.setter('text_size'))
-            self.add_widget(lbl_subtitle)
-
-
-# ==================== CHIPS/TAGS ====================
-
-class ResponsiveChip(Button):
-    """Chip/Tag para categorías"""
-    
-    selected = BooleanProperty(False)
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.background_normal = ''
-        self.size_hint = (None, None)
-        
-        if DesignSystem.is_mobile():
-            self.height = dp(32)
-            self.font_size = ds_font('sm')
-        else:
-            self.height = dp(36)
-            self.font_size = ds_font('base')
-        
-        self.update_appearance()
-        self.bind(selected=lambda *x: self.update_appearance())
-    
-    def update_appearance(self):
-        """Actualizar apariencia según estado"""
-        if self.selected:
-            self.background_color = ds_color('primary')
-            self.color = ds_color('white')
-        else:
-            self.background_color = ds_color('light')
-            self.color = ds_color('dark')
-        
-        self.bold = self.selected
-    
-    def on_size(self, *args):
-        """Ajustar ancho al texto"""
-        self.width = self.texture_size[0] + ds_spacing('lg')
-
-
 # ==================== SEPARADORES ====================
 
-class Divider(BoxLayout):
-    """Línea divisora"""
+class ResponsiveSeparator(BoxLayout):
+    """Separador responsivo"""
+    
+    separator_color = ListProperty([0.7, 0.7, 0.7, 0.5])
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -403,7 +273,7 @@ class Divider(BoxLayout):
         self.height = dp(1)
         
         with self.canvas:
-            Color(*ds_color('gray_light'))
+            Color(*self.separator_color)
             self.line = Rectangle(pos=self.pos, size=self.size)
         
         self.bind(pos=self._update, size=self._update)
@@ -413,50 +283,300 @@ class Divider(BoxLayout):
         self.line.size = self.size
 
 
-# ==================== UTILIDADES ====================
+# ==================== SPINNERS RESPONSIVOS ====================
 
-class EmptyStateWidget(BoxLayout):
+class ResponsiveSpinner(Spinner):
+    """Spinner responsivo"""
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.background_normal = ''
+        self.background_color = ds_color('white')
+        self.color = ds_color('dark')
+        self.size_hint_y = None
+        self.height = dp(48)
+
+
+# ==================== WIDGETS ESPECÍFICOS DEL PROYECTO ====================
+
+class CategoryChipPro(ResponsiveChip):
+    """Chip profesional para categorías"""
+    pass
+
+
+class ProductCardPro(ResponsiveCard):
+    """Card profesional de producto"""
+    
+    producto_nombre = StringProperty("")
+    producto_precio = NumericProperty(0.0)
+    producto_id = NumericProperty(0)
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.orientation = "vertical"
+        self.size_hint = (None, None)
+        self.size = (dp(140), dp(160))
+        self.padding = dp(8)
+        self.spacing = dp(4)
+        self.elevation = 2
+        self.radius = dp(12)
+        self.ripple_behavior = True
+        self.md_bg_color = ds_color('white')
+
+
+class OrderItemPro(ResponsiveCard):
+    """Item profesional de pedido"""
+    
+    item_nombre = StringProperty("")
+    item_cantidad = NumericProperty(1)
+    item_precio = NumericProperty(0.0)
+    item_subtotal = NumericProperty(0.0)
+    item_data = DictProperty({})
+    pedido_screen = ObjectProperty(None)
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.orientation = "horizontal"
+        self.size_hint_y = None
+        self.height = dp(70)
+        self.padding = dp(8)
+        self.spacing = dp(8)
+        self.elevation = 1
+        self.radius = dp(8)
+        self.md_bg_color = ds_color('white')
+
+
+class PedidoItemCompact(ResponsiveCard):
+    """Item compacto de pedido"""
+    
+    pedido_id = NumericProperty(0)
+    pedido_total = NumericProperty(0.0)
+    pedido_estado = StringProperty("")
+    num_items = NumericProperty(0)
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.orientation = "vertical"
+        self.size_hint_y = None
+        self.height = dp(68)
+        self.padding = dp(8)
+        self.spacing = dp(4)
+        self.radius = dp(8)
+        self.elevation = 1
+        self.ripple_behavior = True
+        self.md_bg_color = ds_color('white')
+
+
+class ItemFilaTabla(ResponsiveBoxLayout):
+    """Fila de item en tabla"""
+    
+    item_nombre = StringProperty("")
+    item_cantidad = NumericProperty(1)
+    item_precio = NumericProperty(0.0)
+    item_subtotal = NumericProperty(0.0)
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.orientation = "horizontal"
+        self.size_hint_y = None
+        self.height = dp(44)
+        self.padding = [dp(8), dp(6)]
+        self.spacing = dp(4)
+
+
+class PedidoCocinaCard(ResponsiveCard):
+    """Card de pedido para cocina"""
+    
+    pedido_id = NumericProperty(0)
+    mesa = StringProperty("")
+    estado = StringProperty("pendiente")
+    tiempo_espera = StringProperty("")
+    items_text = StringProperty("")
+    mesero = StringProperty("")
+    cocina_screen = ObjectProperty(None)
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.orientation = "vertical"
+        self.size_hint_y = None
+        self.height = dp(280)
+        self.padding = 0
+        self.spacing = 0
+        self.elevation = 3
+        self.radius = dp(12)
+        self.md_bg_color = ds_color('white')
+    
+    @property
+    def color_estado(self):
+        colores = {
+            'pendiente': ds_color('warning'),
+            'confirmado': ds_color('warning'),
+            'preparacion': ds_color('info'),
+            'listo': ds_color('success')
+        }
+        return colores.get(self.estado, ds_color('gray'))
+    
+    @property
+    def color_estado_light(self):
+        colores = {
+            'pendiente': (*ds_color('warning')[:3], 0.1),
+            'confirmado': (*ds_color('warning')[:3], 0.1),
+            'preparacion': (*ds_color('info')[:3], 0.1),
+            'listo': (*ds_color('success')[:3], 0.1)
+        }
+        return colores.get(self.estado, (*ds_color('gray')[:3], 0.1))
+    
+    @property
+    def color_tiempo(self):
+        if "🔴" in self.tiempo_espera:
+            return ds_color('error')
+        elif "⚠️" in self.tiempo_espera:
+            return ds_color('warning')
+        else:
+            return ds_color('success')
+    
+    @property
+    def texto_boton_principal(self):
+        textos = {
+            'pendiente': 'INICIAR',
+            'confirmado': 'INICIAR',
+            'preparacion': 'MARCAR LISTO',
+            'listo': 'ENTREGADO'
+        }
+        return textos.get(self.estado, 'ACCIÓN')
+    
+    @property
+    def icono_boton_principal(self):
+        iconos = {
+            'pendiente': 'play',
+            'confirmado': 'play',
+            'preparacion': 'check',
+            'listo': 'check-all'
+        }
+        return iconos.get(self.estado, 'check')
+    
+    @property
+    def color_boton_principal(self):
+        colores = {
+            'pendiente': ds_color('warning'),
+            'confirmado': ds_color('warning'),
+            'preparacion': ds_color('success'),
+            'listo': ds_color('info')
+        }
+        return colores.get(self.estado, ds_color('primary'))
+    
+    def accion_principal(self):
+        estados_sig = {
+            'pendiente': 'preparacion',
+            'confirmado': 'preparacion',
+            'preparacion': 'listo',
+            'listo': 'entregado'
+        }
+        
+        nuevo_estado = estados_sig.get(self.estado)
+        if nuevo_estado and self.cocina_screen:
+            self.cocina_screen.cambiar_estado_pedido(self.pedido_id, nuevo_estado)
+    
+    def ver_detalle(self):
+        if self.cocina_screen:
+            self.cocina_screen.ver_detalle_pedido(self.pedido_id)
+
+
+class PedidoPagoCard(ResponsiveCard):
+    """Card de pedido para pago"""
+    
+    pedido_id = NumericProperty(0)
+    mesa = StringProperty("")
+    total = NumericProperty(0.0)
+    num_items = NumericProperty(0)
+    mesero = StringProperty("")
+    tiempo = StringProperty("")
+    caja_screen = ObjectProperty(None)
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.orientation = "vertical"
+        self.size_hint_y = None
+        self.height = dp(200)
+        self.padding = 0
+        self.spacing = 0
+        self.elevation = 2
+        self.radius = dp(12)
+        self.md_bg_color = ds_color('white')
+    
+    def pagar_efectivo(self):
+        if self.caja_screen:
+            self.caja_screen.procesar_pago(self.pedido_id, self.total, 'efectivo')
+    
+    def pagar_tarjeta(self):
+        if self.caja_screen:
+            self.caja_screen.procesar_pago(self.pedido_id, self.total, 'tarjeta')
+    
+    def pagar_transferencia(self):
+        if self.caja_screen:
+            self.caja_screen.procesar_pago(self.pedido_id, self.total, 'transferencia')
+    
+    def ver_detalle(self):
+        if self.caja_screen:
+            self.caja_screen.mostrar_info(f"Detalle del pedido #{self.pedido_id}\nFunción en desarrollo")
+
+
+# ==================== ESTADOS VACÍOS ====================
+
+class EmptyStateWidget(ResponsiveBoxLayout):
     """Widget para estados vacíos"""
     
     message = StringProperty('No hay datos')
-    icon = StringProperty('📭')
+    icon = StringProperty('🔭')
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.orientation = 'vertical'
         self.padding = ds_spacing('2xl')
         self.spacing = ds_spacing('md')
-        
-        # Icono
-        lbl_icon = Label(
-            text=self.icon,
-            font_size=ds_font('4xl'),
-            size_hint_y=None,
-            height=dp(80)
-        )
-        self.add_widget(lbl_icon)
-        
-        # Mensaje
-        lbl_msg = Label(
-            text=self.message,
-            font_size=ds_font('lg'),
-            color=ds_color('gray'),
-            italic=True
-        )
-        self.add_widget(lbl_msg)
 
 
-class LoadingSpinner(BoxLayout):
-    """Indicador de carga simple"""
+class CocinaEmptyState(EmptyStateWidget):
+    """Estado vacío cocina"""
+    
+    def __init__(self, **kwargs):
+        kwargs['icon'] = '👨‍🍳'
+        kwargs['message'] = 'Sin pedidos activos'
+        super().__init__(**kwargs)
+
+
+class CajaEmptyState(EmptyStateWidget):
+    """Estado vacío caja"""
+    
+    def __init__(self, **kwargs):
+        kwargs['icon'] = '💰'
+        kwargs['message'] = 'Sin pedidos pendientes'
+        super().__init__(**kwargs)
+
+
+class EmptyCartState(EmptyStateWidget):
+    """Estado vacío carrito"""
+    
+    def __init__(self, **kwargs):
+        kwargs['icon'] = '🛒'
+        kwargs['message'] = 'Carrito vacío'
+        super().__init__(**kwargs)
+
+
+# ==================== CARDS ESTADÍSTICAS ====================
+
+class EstadisticaCard(ResponsiveCard):
+    """Card de estadística"""
+    
+    titulo = StringProperty("")
+    valor = StringProperty("")
+    icono = StringProperty("")
+    color_fondo = ListProperty([1, 1, 1, 1])
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.orientation = 'vertical'
-        self.padding = ds_spacing('xl')
-        
-        lbl = Label(
-            text='🔄 Cargando...',
-            font_size=ds_font('lg'),
-            color=ds_color('primary')
-        )
-        self.add_widget(lbl)
+        self.orientation = "vertical"
+        self.padding = dp(8)
+        self.spacing = dp(4)
+        self.elevation = 0
+        self.radius = dp(8)

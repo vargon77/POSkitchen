@@ -36,6 +36,14 @@ class TomaPedidoScreen(MDScreen):
             self._cargando = True
             Clock.schedule_once(self._inicializar_pantalla, 0.1)
 
+    def ir_a_menu(self, *args):
+        """Volver al menú principal"""
+        app = MDApp.get_running_app()
+        if hasattr(app, 'cambiar_pantalla'):
+            app.cambiar_pantalla("menu")
+        else:
+            self.manager.current = "menu"
+
     def _inicializar_pantalla(self, dt):
         """Inicialización asíncrona"""
         try:
@@ -485,7 +493,7 @@ class CategoryChipPro(MDChip):
             self.text_color = ds_color('dark')
     
     def on_size(self, *args):
-        self.width = max(self.texture_size[0] + dp(32), dp(80))
+        self.width = max(self.size[0]+ dp(32), dp(80))
 
 
 class ProductCardPro(MDCard):

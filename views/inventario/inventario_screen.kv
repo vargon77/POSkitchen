@@ -1,0 +1,81 @@
+# views/inventario/inventario_screen.kv 
+<InventarioScreen>:
+    name: "inventario"
+    
+    MDBoxLayout:
+        orientation: "vertical"
+        spacing: 0
+        padding: 0
+
+        # ========== TOP BAR ==========
+        MDTopAppBar:
+            title: "📦 Inventario de Productos"
+            md_bg_color: ds_color('primary')
+            elevation: 2
+            left_action_items: [["arrow-left", lambda x: app.cambiar_pantalla("menu")]]
+            right_action_items: 
+                [
+                    ["plus-circle", lambda x: root.agregar_producto()],
+                    ["refresh", lambda x: root.cargar_productos()]
+                ]
+
+        # ========== FILTROS Y BÚSQUEDA ==========
+        MDCard:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: dp(60)
+            padding: ds_spacing('md')
+            spacing: ds_spacing('md')
+            elevation: 1
+            md_bg_color: ds_color('light')
+
+            # Categorías
+            MDBoxLayout:
+                orientation: "horizontal"
+                size_hint_x: 0.4
+                spacing: dp(8)
+                
+                MDLabel:
+                    text: "Categoría:"
+                    size_hint_x: 0.35
+                    font_style: "Subtitle2"
+                
+                Spinner:
+                    id: spinner_categoria
+                    text: "Todos"
+                    values: root.categorias
+                    size_hint_x: 0.65
+                    on_text: root.filtrar_por_categoria(self.text)
+
+            # Búsqueda
+            MDTextField:
+                id: input_busqueda
+                hint_text: "Buscar producto..."
+                mode: "rectangle"
+                icon_left: "magnify"
+                size_hint_x: 0.5
+                on_text: root.buscar_productos(self.text)
+
+            # Contador
+            MDLabel:
+                id: label_count
+                text: "0 productos"
+                font_style: "Caption"
+                theme_text_color: "Secondary"
+                size_hint_x: 0.1
+                halign: "right"
+
+        # ========== GRID DE PRODUCTOS ==========
+        ScrollView:
+            do_scroll_x: False
+            bar_width: dp(4)
+            bar_color: ds_color('primary', 0.3)
+
+            MDGridLayout:
+                id: grid_productos
+                cols: 3 if not ds_is_mobile() else 1
+                spacing: ds_spacing('md')
+                padding: ds_spacing('md')
+                size_hint_y: None
+                height: self.minimum_height
+                adaptive_size: True

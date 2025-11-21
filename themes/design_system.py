@@ -1,4 +1,4 @@
-# themes/design_system.py - SISTEMA UNIFICADO
+# themes/design_system.py 
 """
 Sistema de Diseño Unificado para POS
 Compatible con Kivy 2.3.0 y KivyMD 1.2.0

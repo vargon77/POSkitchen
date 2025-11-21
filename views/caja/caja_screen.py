@@ -1,4 +1,4 @@
-# views/caja/caja_screen.py - VERSIÓN PROFESIONAL
+# views/caja/caja_screen.py
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.card import MDCard
 from kivymd.uix.label import MDLabel
@@ -42,6 +42,17 @@ class CajaScreen(MDScreen):
         self.inicializar_servicios()
         self.verificar_estado_caja()
         self.cargar_pedidos_pendientes()
+
+    # ========== MÉTODOS PARA TOPAPPBAR ==========
+    def ir_a_menu(self, *args):
+        """Volver al menú principal"""
+        app = MDApp.get_running_app()
+        if hasattr(app, 'cambiar_pantalla'):
+            app.cambiar_pantalla("menu")
+        else:
+            self.manager.current = "menu"
+
+    # ========== FIN MÉTODOS TOPAPPBAR ==========
 
     def inicializar_servicios(self):
         """Inicializar servicios"""
@@ -97,7 +108,6 @@ class CajaScreen(MDScreen):
         """Filtrar pedidos"""
         self.filtro_actual = filtro
         self.actualizar_chips_filtro(filtro)
-        # Aquí podrías filtrar realmente si tuvieras más estados
 
     def actualizar_chips_filtro(self, filtro_activo):
         """Actualizar chips de filtro"""
@@ -131,7 +141,6 @@ class CajaScreen(MDScreen):
             self.ids.label_count_pedidos.text = f"{len(self.pedidos_pendientes)} pedidos"
         
         if not self.pedidos_pendientes:
-            # Estado vacío
             self.ids.contenedor_pedidos.add_widget(CajaEmptyState())
             return
         
@@ -293,7 +302,6 @@ class CajaScreen(MDScreen):
                     on_release=lambda x: self.dialog.dismiss()
                 ),
                 MDRaisedButton(
-                    id='btn_confirmar_cambio',
                     text="CONFIRMAR",
                     md_bg_color=ds_color('success'),
                     disabled=True,
@@ -400,10 +408,10 @@ class CajaScreen(MDScreen):
         info_box = MDBoxLayout(
             orientation='vertical',
             size_hint_y=None,
-            height=self.minimum_height,
             spacing=dp(8),
             padding=dp(10)
         )
+        info_box.bind(minimum_height=info_box.setter('height'))
         
         datos = [
             ("Empleado:", reporte['empleado']),
@@ -473,10 +481,9 @@ class CajaScreen(MDScreen):
             self.mostrar_error("Error calculando efectivo teórico")
             return
         
-        # Aquí mostrarías un diálogo similar al de cierre pero para arqueo
         self.mostrar_info(f"Efectivo teórico: ${teorico_data['efectivo_teorico']:.2f}")
 
-    def ver_historial_cierres(self):
+    def ver_historial_cierres(self, *args):
         """Ver historial de cierres"""
         historial = self.caja_service.obtener_historial_cierres(7)
         
@@ -484,14 +491,13 @@ class CajaScreen(MDScreen):
             self.mostrar_info("No hay historial disponible")
             return
         
-        # Aquí mostrarías el historial en un diálogo con scroll
         mensaje = "📅 ÚLTIMOS CIERRES:\n\n"
         for cierre in historial[:5]:
             mensaje += f"• {cierre['fecha']}: ${cierre['total_cierre']:.2f}\n"
         
         self.mostrar_info(mensaje)
 
-    def forzar_actualizacion(self):
+    def forzar_actualizacion(self, *args):
         """Forzar actualización manual"""
         print("🔄 Actualizando datos...")
         self.verificar_estado_caja()

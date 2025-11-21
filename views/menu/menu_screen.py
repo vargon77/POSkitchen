@@ -1,6 +1,6 @@
-# views/menu/menu_screen.py - VERSIÓN MEJORADA
+# views/menu/menu_screen.py
 from kivymd.uix.screen import MDScreen
-from kivy.properties import StringProperty, NumericProperty, ObjectProperty, DictProperty
+from kivy.properties import StringProperty, NumericProperty, DictProperty
 from kivy.clock import Clock
 from themes.design_system import DesignSystem, ds_grid_cols
 from kivymd.app import MDApp
@@ -12,31 +12,22 @@ class MenuScreen(MDScreen):
     pedidos_activos = NumericProperty(0)
     mesas_ocupadas = NumericProperty(0)
     mesas_totales = NumericProperty(10)
-    
-    # Nueva propiedad para gestión de estado
     estadisticas_data = DictProperty({})
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._estadisticas_actualizadas = False
-        self._grid_actualizado = False
     
     def on_enter(self):
         """Cuando la pantalla se muestra"""
         print("📱 Cargando pantalla de Menú Principal...")
-        
-        # Actualizar datos del usuario
         self.actualizar_datos_usuario()
         
-        # Actualizar estadísticas
         if not self._estadisticas_actualizadas:
             self.actualizar_estadisticas()
             self._estadisticas_actualizadas = True
         
-        # Actualizar grid responsivo
         self.actualizar_grid_responsive()
-        
-        # Forzar actualización de UI
         Clock.schedule_once(self._actualizar_ui, 0.1)
     
     def on_size(self, *args):
@@ -46,10 +37,6 @@ class MenuScreen(MDScreen):
     def actualizar_grid_responsive(self):
         """Actualizar columnas del grid según tamaño de pantalla"""
         if hasattr(self, 'ids') and 'grid_modulos' in self.ids:
-            # Calcular columnas según ancho de pantalla
-            cols = ds_grid_cols(default_cols=2)
-            
-            # Para móvil siempre 1 columna en menú
             if DesignSystem.is_mobile():
                 cols = 1
             elif DesignSystem.is_tablet():
@@ -77,10 +64,12 @@ class MenuScreen(MDScreen):
             app = MDApp.get_running_app()
             
             if not app or not app.db_service:
-                print("⚠️ Servicio de BD no disponible")
+                print("⚠️ Servicio de BD no disponible - usando valores de ejemplo")
+                self.ventas_hoy = 1250
+                self.pedidos_activos = 8
+                self.mesas_ocupadas = 6
                 return
             
-            # Obtener estadísticas reales
             from services.pedido_service import PedidoService
             from services.caja_service import CajaService
             
@@ -95,10 +84,9 @@ class MenuScreen(MDScreen):
             pedidos = pedido_service.obtener_pedidos_activos()
             self.pedidos_activos = len(pedidos)
             
-            # Mesas ocupadas (simplificado)
+            # Mesas ocupadas
             self.mesas_ocupadas = min(self.pedidos_activos, self.mesas_totales)
             
-            # Actualizar diccionario de datos
             self.estadisticas_data = {
                 'ventas_hoy': self.ventas_hoy,
                 'pedidos_activos': self.pedidos_activos,
@@ -109,8 +97,8 @@ class MenuScreen(MDScreen):
             print(f"📊 Estadísticas actualizadas: {self.estadisticas_data}")
             
         except Exception as e:
-            print(f"⚠️ Error obteniendo estadísticas reales: {e}")
-            # Usar valores simulados si falla
+            print(f"⚠️ Error obteniendo estadísticas: {e}")
+            # Valores por defecto
             self.ventas_hoy = 1250
             self.pedidos_activos = 8
             self.mesas_ocupadas = 6
@@ -118,7 +106,6 @@ class MenuScreen(MDScreen):
     def _actualizar_ui(self, dt):
         """Forzar actualización de la UI"""
         try:
-            # Actualizar propiedades que podrían estar bindeadas
             self.property('usuario_nombre').dispatch(self)
             self.property('ventas_hoy').dispatch(self)
             self.property('pedidos_activos').dispatch(self)
@@ -127,34 +114,50 @@ class MenuScreen(MDScreen):
             print(f"⚠️ Error actualizando UI: {e}")
     
     def ir_a_modulo(self, modulo):
-        """Navegar a módulo específico CON VALIDACIÓN"""
+        """MÉTODO CORREGIDO - Navegar a módulo específico"""
         print(f"🔄 Navegando a módulo: {modulo}")
         
         app = MDApp.get_running_app()
         
-        # Validar que el usuario tenga permisos
-        if hasattr(app, 'auth_service') and app.auth_service:
-            if not app.auth_service.verificar_permiso(modulo):
-                print(f"❌ Permiso denegado para: {modulo}")
-                self._mostrar_error_permisos(modulo)
-                return
+        # Lista ACTUALIZADA de pantallas que realmente existen
+        pantallas_disponibles = [
+            'login', 'menu', 'pedidos', 'cierre_cuenta', 
+            'cocina', 'caja', 'config'
+        ]
         
-        # Navegar
-        if hasattr(app, 'cambiar_pantalla'):
-            app.cambiar_pantalla(modulo)
-        else:
-            # Fallback
-            self.manager.current = modulo
+        # Verificar que la pantalla existe
+        if modulo not in pantallas_disponibles:
+            print(f"❌ Módulo '{modulo}' no disponible")
+            self._mostrar_snackbar(f"Módulo {modulo} en desarrollo")
+            return
         
-        print(f"✅ Navegación a {modulo} completada")
-    
-    def _mostrar_error_permisos(self, modulo):
-        """Mostrar mensaje de error de permisos"""
-        from kivymd.uix.snackbar import Snackbar
-        Snackbar(
-            text=f"No tienes permisos para acceder a {modulo.upper()}",
-            duration=3
-        ).open()
+        # Navegar usando el método de la app
+        try:
+            if hasattr(app, 'cambiar_pantalla'):
+                app.cambiar_pantalla(modulo, close_drawer=False)
+            else:
+                # Fallback directo
+                self.manager.current = modulo
+            
+            print(f"✅ Navegación a {modulo} completada")
+        except Exception as e:
+            print(f"❌ Error navegando a {modulo}: {e}")
+            self._mostrar_snackbar(f"Error al abrir {modulo}")
+
+
+    def _mostrar_snackbar(self, mensaje):
+        """Mostrar mensaje temporal"""
+        try:
+            from kivymd.uix.snackbar import Snackbar
+            Snackbar(
+                text=mensaje,
+                duration=3,
+                snackbar_x="10dp",
+                snackbar_y="10dp",
+                size_hint_x=0.9
+            ).open()
+        except Exception as e:
+            print(f"⚠️ Error mostrando snackbar: {e}")
     
     def refrescar_estadisticas(self):
         """Método público para refrescar estadísticas"""

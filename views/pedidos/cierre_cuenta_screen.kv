@@ -1,26 +1,22 @@
-# views/pedidos/cierre_cuenta_screen.kv - DISEÑO PROFESIONAL
+# views/pedidos/cierre_cuenta_screen.kv - COMPLETO CORREGIDO
 <CierreCuentaScreen>:
     name: "cierre_cuenta"
     
-    MDBoxLayout:
+    ResponsiveBoxLayout:
         orientation: "vertical"
-        spacing: 0
-        padding: 0
+        responsive_spacing: "none"
+        responsive_padding: "none"
 
-        # ========== TOP BAR COMPACTA ==========
+        # ========== TOP BAR ==========
         MDTopAppBar:
             title: f"Cierre - Mesa {root.mesa_seleccionada if root.mesa_seleccionada else '...'}"
             md_bg_color: ds_color('primary')
             elevation: 2
-            left_action_items: [["arrow-left", lambda x: root.volver_al_menu()]]
-            right_action_items: 
-                [
-                    ["refresh", lambda x: root.refrescar_datos()],
-                    ["receipt", lambda x: root.ver_tickets_generados()]
-                ]
+            left_action_items: [["arrow-left", root.volver_al_menu]]
+            right_action_items: [["refresh", root.refrescar_datos], ["receipt", root.ver_tickets_generados]]
 
-        # ========== SELECTOR MESA COMPACTO ==========
-        MDCard:
+        # ========== SELECTOR MESA ==========
+        ResponsiveCard:
             orientation: "horizontal"
             size_hint_y: None
             height: dp(56)
@@ -36,12 +32,11 @@
                 size_hint_x: None
                 width: dp(60)
 
-            Spinner:
+            ResponsiveSpinner:
                 id: selector_mesa
                 text: "Seleccionar"
                 values: root.mesas_disponibles
                 size_hint_x: 1
-                background_color: ds_color('white')
                 on_text: root.cargar_pedidos_mesa(self.text)
 
             MDLabel:
@@ -53,12 +48,12 @@
                 halign: "right"
 
         # ========== CONTENIDO PRINCIPAL ==========
-        MDBoxLayout:
+        ResponsiveBoxLayout:
             orientation: "horizontal" if not ds_is_mobile() else "vertical"
-            spacing: ds_spacing('xs')
+            responsive_spacing: "xs"
 
             # ===== LISTA DE PEDIDOS (30%) =====
-            MDCard:
+            ResponsiveCard:
                 orientation: "vertical"
                 size_hint_x: 0.3 if not ds_is_mobile() else 1
                 size_hint_y: 0.3 if ds_is_mobile() else 1
@@ -66,12 +61,18 @@
                 padding: 0
 
                 # Header
-                MDBoxLayout:
+                ResponsiveBoxLayout:
                     orientation: "horizontal"
                     size_hint_y: None
                     height: dp(44)
-                    padding: ds_spacing('sm')
-                    md_bg_color: ds_color('secondary', 0.1)
+                    responsive_padding: "sm"
+                    
+                    canvas.before:
+                        Color:
+                            rgba: ds_color('secondary', 0.1)
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
 
                     MDLabel:
                         text: "PEDIDOS"
@@ -88,21 +89,20 @@
                         halign: "right"
 
                 # Lista scrollable
-                ScrollView:
+                ResponsiveScrollView:
                     do_scroll_x: False
                     bar_width: dp(3)
 
-                    MDBoxLayout:
+                    ResponsiveBoxLayout:
                         id: lista_pedidos
                         orientation: "vertical"
                         size_hint_y: None
                         height: self.minimum_height
                         spacing: dp(2)
                         padding: ds_spacing('xs')
-                        adaptive_size: True
 
             # ===== DETALLE Y ACCIONES (70%) =====
-            MDCard:
+            ResponsiveCard:
                 orientation: "vertical"
                 size_hint_x: 0.7 if not ds_is_mobile() else 1
                 size_hint_y: 0.7 if ds_is_mobile() else 1
@@ -111,13 +111,19 @@
                 spacing: 0
 
                 # --- Header Pedido ---
-                MDBoxLayout:
+                ResponsiveBoxLayout:
                     orientation: "horizontal"
                     size_hint_y: None
                     height: dp(56)
-                    padding: ds_spacing('md')
-                    md_bg_color: ds_color('primary')
-                    spacing: ds_spacing('sm')
+                    responsive_padding: "md"
+                    responsive_spacing: "sm"
+                    
+                    canvas.before:
+                        Color:
+                            rgba: ds_color('primary')
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
 
                     MDLabel:
                         id: label_pedido_info
@@ -138,7 +144,7 @@
                         size_hint_x: 0.3
                         halign: "right"
 
-                    MDRaisedButton:
+                    ResponsiveMDRaisedButton:
                         id: btn_pagar_completo
                         text: "PAGAR"
                         icon: "cash-check"
@@ -148,17 +154,23 @@
                         on_release: root.pagar_pedido_completo()
 
                 # --- Tabla Items ---
-                MDBoxLayout:
+                ResponsiveBoxLayout:
                     orientation: "vertical"
                     spacing: 0
 
                     # Header tabla
-                    MDBoxLayout:
+                    ResponsiveBoxLayout:
                         orientation: "horizontal"
                         size_hint_y: None
                         height: dp(36)
                         padding: [ds_spacing('sm'), dp(4)]
-                        md_bg_color: ds_color('gray_light')
+                        
+                        canvas.before:
+                            Color:
+                                rgba: ds_color('gray_light')
+                            Rectangle:
+                                pos: self.pos
+                                size: self.size
 
                         MDLabel:
                             text: "Producto"
@@ -188,20 +200,19 @@
                             halign: "right"
 
                     # Contenido scrollable
-                    ScrollView:
+                    ResponsiveScrollView:
                         do_scroll_x: False
                         bar_width: dp(3)
 
-                        MDBoxLayout:
+                        ResponsiveBoxLayout:
                             id: detalle_items
                             orientation: "vertical"
                             size_hint_y: None
                             height: self.minimum_height
                             spacing: dp(1)
-                            adaptive_size: True
 
                 # --- Panel Métodos Pago ---
-                MDCard:
+                ResponsiveCard:
                     orientation: "vertical"
                     size_hint_y: None
                     height: dp(100)
@@ -217,35 +228,41 @@
                         size_hint_y: None
                         height: dp(20)
 
-                    MDBoxLayout:
+                    ResponsiveBoxLayout:
                         orientation: "horizontal"
-                        spacing: ds_spacing('xs')
+                        responsive_spacing: "xs"
 
-                        MDChip:
+                        ResponsiveChip:
                             id: chip_efectivo
                             text: "💵 Efectivo"
                             on_press: root.seleccionar_metodo('efectivo')
 
-                        MDChip:
+                        ResponsiveChip:
                             id: chip_tarjeta
                             text: "💳 Tarjeta"
                             on_press: root.seleccionar_metodo('tarjeta')
 
-                        MDChip:
+                        ResponsiveChip:
                             id: chip_transfer
                             text: "📱 Transfer"
                             on_press: root.seleccionar_metodo('transferencia')
 
                 # --- Footer: Total y Confirmar ---
-                MDBoxLayout:
+                ResponsiveBoxLayout:
                     orientation: "horizontal"
                     size_hint_y: None
                     height: dp(70)
-                    padding: ds_spacing('md')
-                    spacing: ds_spacing('md')
-                    md_bg_color: ds_color('success', 0.05)
+                    responsive_padding: "md"
+                    responsive_spacing: "md"
+                    
+                    canvas.before:
+                        Color:
+                            rgba: ds_color('success', 0.05)
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
 
-                    MDBoxLayout:
+                    ResponsiveBoxLayout:
                         orientation: "vertical"
                         size_hint_x: 0.4
                         spacing: dp(2)
@@ -265,17 +282,17 @@
                             theme_text_color: "Custom"
                             text_color: ds_color('success')
 
-                    MDBoxLayout:
+                    ResponsiveBoxLayout:
                         orientation: "horizontal"
                         size_hint_x: 0.6
-                        spacing: ds_spacing('sm')
+                        responsive_spacing: "sm"
 
                         MDFlatButton:
                             text: "DESCUENTO"
                             icon: "sale"
                             on_release: root.aplicar_descuento()
 
-                        MDRaisedButton:
+                        ResponsiveMDRaisedButton:
                             id: btn_confirmar_pago
                             text: "CONFIRMAR PAGO"
                             icon: "check-bold"
@@ -285,7 +302,7 @@
 
 
 # ========== WIDGET: ITEM PEDIDO COMPACTO ==========
-<PedidoItemCompact@MDCard>:
+<PedidoItemCompact>:
     orientation: "vertical"
     size_hint_y: None
     height: dp(68)
@@ -294,19 +311,12 @@
     radius: dp(8)
     elevation: 1
     ripple_behavior: True
-    
-    pedido_id: 0
-    pedido_total: 0.0
-    pedido_estado: ""
-    num_items: 0
-    
     md_bg_color: ds_color('white')
     
-    MDBoxLayout:
+    ResponsiveBoxLayout:
         orientation: "horizontal"
-        spacing: dp(8)
+        responsive_spacing: "sm"
         
-        # Número pedido
         MDLabel:
             text: f"#{root.pedido_id}"
             font_style: "H6"
@@ -314,8 +324,7 @@
             size_hint_x: 0.2
             theme_text_color: "Primary"
         
-        # Info
-        MDBoxLayout:
+        ResponsiveBoxLayout:
             orientation: "vertical"
             size_hint_x: 0.5
             spacing: dp(2)
@@ -331,7 +340,6 @@
                 theme_text_color: "Primary"
                 bold: True
         
-        # Total
         MDLabel:
             text: f"${root.pedido_total:.2f}"
             font_style: "Subtitle1"
@@ -343,17 +351,12 @@
 
 
 # ========== WIDGET: FILA ITEM TABLA ==========
-<ItemFilaTabla@MDBoxLayout>:
+<ItemFilaTabla>:
     orientation: "horizontal"
     size_hint_y: None
     height: dp(44)
     padding: [ds_spacing('sm'), dp(6)]
     spacing: dp(4)
-    
-    item_nombre: ""
-    item_cantidad: 1
-    item_precio: 0.0
-    item_subtotal: 0.0
     
     canvas.before:
         Color:

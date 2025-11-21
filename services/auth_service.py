@@ -1,4 +1,4 @@
-# services/auth_service.py
+# services/auth_service.py - PERMISOS CORREGIDOS
 import psycopg2
 from typing import Dict, Optional, Tuple
 from datetime import datetime
@@ -33,10 +33,7 @@ class AuthService:
                     'activo': resultado[4]
                 }
                 
-                # Guardar usuario actual
                 self.usuario_actual = usuario
-                
-                # Registrar login en historial
                 self.registrar_accion(usuario['id'], 'LOGIN', 'Inicio de sesión exitoso')
                 
                 print(f"✅ Login exitoso: {usuario['nombre']} ({usuario['rol']})")
@@ -113,23 +110,46 @@ class AuthService:
             return []
     
     def verificar_permiso(self, pantalla: str) -> bool:
-        """Verificar si el usuario actual tiene permiso para acceder a una pantalla"""
+        """Verificar permisos - VERSIÓN CORREGIDA Y MÁS FLEXIBLE"""
         if not self.usuario_actual:
+            print(f"⚠️ Sin usuario actual - denegando acceso a {pantalla}")
             return False
-        # ADMIN tiene acceso a TODO
-        if self.usuario_actual['rol'] == 'administrador':
+        
+        rol = self.usuario_actual['rol'].lower()
+        
+        # ADMINISTRADOR tiene acceso a TODO
+        if rol == 'administrador' or rol == 'admin':
+            print(f"✅ Admin tiene acceso total a {pantalla}")
             return True
         
+        # PERMISOS POR ROL - MÁS FLEXIBLES
         permisos = {
-            'mesero': ['menu', 'pedidos'],
-            'cocinero': ['menu', 'cocina'],
-            'cajero': ['menu', 'caja']
+            'mesero': [
+                'menu', 'pedidos', 'cierre_cuenta', 'cocina'
+            ],
+            'cocinero': [
+                'menu', 'cocina', 'pedidos'  # Puede ver pedidos
+            ],
+            'cajero': [
+                'menu', 'caja', 'cierre_cuenta', 'pedidos', 'cocina', 'inventario'
+            ],
+            'administrador': [  # Por si acaso no detecta 'admin'
+                'menu', 'pedidos', 'cierre_cuenta', 'cocina', 
+                'caja', 'inventario', 'config', 'reportes'
+            ]
         }
         
-        rol = self.usuario_actual['rol']
-        pantallas_permitidas = permisos.get(rol, [])
+        pantallas_permitidas = permisos.get(rol, ['menu'])
         
-        return pantalla in pantallas_permitidas
+        tiene_permiso = pantalla in pantallas_permitidas
+        
+        if tiene_permiso:
+            print(f"✅ Rol '{rol}' tiene acceso a '{pantalla}'")
+        else:
+            print(f"🚫 Rol '{rol}' NO tiene acceso a '{pantalla}'")
+            print(f"   Pantallas permitidas: {pantallas_permitidas}")
+        
+        return tiene_permiso
     
     def cambiar_pin(self, nuevo_pin: str) -> bool:
         """Cambiar PIN del usuario actual"""
@@ -150,7 +170,6 @@ class AuthService:
             cur.close()
             conn.close()
             
-            # Registrar acción
             self.registrar_accion(self.usuario_actual['id'], 'CAMBIAR_PIN', 'PIN actualizado')
             
             print(f"✅ PIN actualizado para {self.usuario_actual['nombre']}")
@@ -166,7 +185,6 @@ class AuthService:
             return False
         
         rol = usuario_actual.get('rol', '').lower()
-        # Solo cajeros y administradores pueden cerrar pedidos
         return rol in ['cajero', 'administrador', 'admin']
 
     def puede_imprimir_tickets(self, usuario_actual: Dict) -> bool:
@@ -175,5 +193,4 @@ class AuthService:
             return False
         
         rol = usuario_actual.get('rol', '').lower()
-        # Solo cajeros y administradores pueden imprimir tickets finales
         return rol in ['cajero', 'administrador', 'admin']
